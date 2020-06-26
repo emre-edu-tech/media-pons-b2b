@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', 'FrontController@index')->name('welcome');
 Route::get('/apply', 'FrontController@showApplyForm')->name('apply');
 
-Auth::routes();
+Auth::routes([
+    'register' => false,
+]);
 
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/products', 'HomeController@products')->name('products');
