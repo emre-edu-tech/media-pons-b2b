@@ -1,0 +1,161 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+
+// Fontawesome
+@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
+@import '~@fortawesome/fontawesome-free/scss/brands.scss';
+@import '~@fortawesome/fontawesome-free/scss/regular.scss';
+@import '~@fortawesome/fontawesome-free/scss/solid.scss';
+
+// Custom styles
+.chat-card-body {
+    padding: 0;
+}
+
+.chat-app {
+    display: flex;
+}
+
+.conversation {
+    flex: 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    h1 {
+        font-size: 1.4rem;
+        padding: 10px;
+        margin: 0;
+        border-bottom: dashed 1px lightgray;
+    }
+}
+
+.contacts-list {
+    flex: 2;
+    max-height: 1000px;
+    overflow: scroll;
+    border-left: solid 1px #a6a6a6;
+
+    p {
+        margin: 0;
+
+        &.name {
+            font-weight: 700;
+        }
+    }
+
+    ul {
+        list-style-type: none;
+        padding-left: 0;
+
+        li {
+            display: flex;
+            padding: 2px;
+            border-bottom: solid 1px #aaa;
+            height: 100px;
+            position: relative;
+            cursor: pointer;
+
+            &.selected {
+                background-color: #dfdfdf;
+            }
+
+            .avatar {
+                display: flex;
+                align-items: center;
+                flex: 1;
+
+                img {
+                    width: 50px;
+                    border-radius: 50%;
+                    margin: 0px auto;
+                }
+            }
+
+            .contact-info {
+                flex: 3;
+                font-size: .8rem;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .unread {
+                background: #82e0a8;
+                color: #fff;
+                position: absolute;
+                right: 12px;
+                top: 20px;
+                display: flex;
+                font-weight: 700;
+                min-width: 20px;
+                justify-content: center;
+                align-items: center;
+                line-height: 20px;
+                font-size: 12px;
+                padding: 0 4px;
+                border-radius: 5px;
+            }
+        }
+    }
+}
+
+.message-composer {
+    textarea {
+        width: 96%;
+        resize: none;
+        margin: 10px;
+        border: solid 1px lightgray;
+        border-radius: 3px;
+        padding: 6px;
+    }
+}
+
+.messages-feed {
+    background: #f0f0f0;
+    height: 100%;
+    max-height: 900px;
+    overflow: scroll;
+
+    ul {
+        list-style-type: none;
+        padding: 5px;
+
+        li {
+            &.message {
+                margin: 10px 0;
+                width: 100%;
+
+                .text {
+                    max-width: 250px;
+                    border-radius: 5px;
+                    padding: 12px;
+                    display: inline-block;
+                }
+
+                &.received {
+                    text-align: right;
+                    
+                    .text {
+                        background: #b2b2b2;
+                    }
+                }
+
+                &.sent {
+                    text-align: left;
+                    
+                    .text {
+                        background: lightblue;
+                    }
+                }
+            }
+        }
+    }
+}
