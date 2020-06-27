@@ -6,7 +6,7 @@
                     <div class="card-header">Welcome to our application</div>
 
                     <div class="card-body">
-                        <a href="/dealers">Go to handlerlist</a> 
+                        <a href="/dealers">Zur Händleranwendungen</a> 
                     </div>
                 </div>
             </div>

@@ -38,7 +38,7 @@
                                 </router-link>
                             </li>
                             <li class="nav-item">
-                                <router-link class="nav-link" to="/dealers">Händlerlist</router-link>
+                                <router-link class="nav-link" to="/dealers">Anwendungsliste</router-link>
                             </li>
                             <li class="nav-item">
                                 <router-link class="nav-link" to="/dealer-chat">Händlerchat</router-link>
