@@ -82,7 +82,7 @@
                         <a href="{{ url('/home') }}">Home</a>
                     @else
                         <a href="{{ route('login') }}">Login</a>
-                        <a class="nav-link" href="{{ route('apply') }}">{{ __('Apply for partnership') }}</a>
+                        <a class="nav-link" href="{{ route('front.applyform') }}">{{ __('Apply for partnership') }}</a>
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}">Register</a>
                         @endif
