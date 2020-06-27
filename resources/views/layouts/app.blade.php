@@ -32,19 +32,16 @@
                     
                     <ul class="navbar-nav mr-auto">
                         @auth
-                            <li class="nav-item active">
-                                <a class="nav-link" href="#">Home
+                            <li class="nav-item">
+                                <router-link class="nav-link" to="/home">Home
                                     <span class="sr-only">(current)</span>
-                                </a>
+                                </router-link>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Shop</a>
+                                <router-link class="nav-link" to="/dealers">Händlerlist</router-link>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#">Services</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">Contact</a>
+                                <router-link class="nav-link" to="/dealer-chat">Händlerchat</router-link>
                             </li>
                         @else
                         <li class="nav-item">
@@ -90,7 +87,7 @@
         </nav>
 
         <main class="py-4">
-            @yield('content')
+            <router-view :user="{{ Auth::user() }}"></router-view>
             <vue-progress-bar></vue-progress-bar>
         </main>
 

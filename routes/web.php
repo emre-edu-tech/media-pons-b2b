@@ -21,5 +21,6 @@ Auth::routes([
 ]);
 
 Route::get('/home', 'HomeController@index')->name('home');
-Route::get('/products', 'HomeController@products')->name('products');
-Route::get('/product', 'HomeController@product')->name('product');
+
+// To keep vue router working even after browser refresh
+Route::get('{path}', 'HomeController@index')->where('path', '([A-z\d\-\/_.]+)?');

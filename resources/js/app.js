@@ -52,6 +52,35 @@ window.objectToFormData = objectToFormData;
 window.FireEvent = new Vue();
 // ########
 
+// # Vue router related code
+import VueRouter from 'vue-router';
+Vue.use(VueRouter);
+let routes = [
+    {
+        path: '/home',
+        component: require('./components/Home.vue').default
+    },
+    {
+        path: '/dealers',
+        component: require('./components/Dealers.vue').default
+    },
+    {
+        path: '/dealer-chat',
+        component: require('./components/ChatApp.vue').default
+    },
+    {
+        path: '*',
+        component: require('./components/NotFound.vue').default
+    }
+];
+// register your router
+const router = new VueRouter({
+    linkActiveClass: 'active',
+    mode: 'history',
+    routes
+});
+// #######
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -63,9 +92,10 @@ window.FireEvent = new Vue();
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
-Vue.component('example-component', require('./components/ExampleComponent.vue').default);
-Vue.component('chat-app', require('./components/ChatApp.vue').default);
+// Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 Vue.component('apply-form', require('./components/ApplyForm.vue').default);
+Vue.component('not-found', require('./components/NotFound.vue').default);
+
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -75,4 +105,5 @@ Vue.component('apply-form', require('./components/ApplyForm.vue').default);
 
 const app = new Vue({
     el: '#app',
+    router,
 });

@@ -1,8 +1,19 @@
 <template>
-    <div class="chat-app">
-        <Conversation :contact="selectedContact" :messages="messages" @newMessage="saveNewMessage" />
-        <ContactsList :contacts="contacts" @selected="startConversationWith" />
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-sm-12">
+            <div class="card">
+                <div class="card-header">Media Pons Chat</div>
+                <div class="card-body chat-card-body">
+                    <div class="chat-app">
+                        <Conversation :contact="selectedContact" :messages="messages" @newMessage="saveNewMessage" />
+                        <ContactsList :contacts="contacts" @selected="startConversationWith" />
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 </template>
 
 <script>

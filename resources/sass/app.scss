@@ -14,6 +14,11 @@
 @import '~@fortawesome/fontawesome-free/scss/solid.scss';
 
 // Custom styles
+main {
+    height: 90vh;
+    overflow: auto;
+}
+
 .chat-card-body {
     padding: 0;
 }
