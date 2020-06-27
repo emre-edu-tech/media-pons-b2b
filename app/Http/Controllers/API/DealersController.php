@@ -11,6 +11,12 @@ use Storage;
 
 class DealersController extends Controller
 {
+    // added for api security
+    // allows only javascript applications with JWT to access api route
+    public function __construct() {
+        $this->middleware('auth:api');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -18,7 +24,7 @@ class DealersController extends Controller
      */
     public function index()
     {
-        //
+        return Dealer::latest()->paginate(20);
     }
 
     /**
@@ -67,8 +73,8 @@ class DealersController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'description' => $request->description,
-                'business_registration_form' => $filename_business_reg_form,
-                'id_card' => $filename_id_card,
+                'business_registration_form' => $name . '-' .$filename_business_reg_form,
+                'id_card' => $name . '-' .$filename_id_card,
                 'tax_number' => $request->tax_number
             ]);
         } else {
