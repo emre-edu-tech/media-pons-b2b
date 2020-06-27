@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'FrontController@index')->name('welcome');
-Route::get('/apply', 'FrontController@showApplyForm')->name('apply');
+Route::get('/apply', 'FrontController@showApplyForm')->name('front.applyform');
+Route::post('/apply', 'FrontController@applyAsDealer')->name('front.applyasdealer');
 
 Auth::routes([
     'register' => false,

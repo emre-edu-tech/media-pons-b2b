@@ -157,7 +157,7 @@
 
             registerInfo() {
                 this.$Progress.start();
-                this.form.submit('post', '/api/dealers', {
+                this.form.submit('post', '/apply', {
                     transformRequest: [function (data, headers) {
                         return objectToFormData(data)
                     }],
