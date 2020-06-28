@@ -81,6 +81,27 @@ const router = new VueRouter({
 });
 // #######
 
+// # Global Filter functions
+Vue.filter('allUpperCase', function(text) {
+    return text.toUpperCase();
+});
+
+Vue.filter('firstUpperCase', function(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+});
+
+Vue.filter('titleCase', function(text) {
+    
+    return text.toLowerCase().split(' ').map(function(chunk){
+        return chunk.charAt(0).toUpperCase() + chunk.substring(1);
+    }).join(' ');
+});
+
+Vue.filter('customDate', function(dateTime) {
+    return moment(dateTime).format('D MMM YYYY, H:mm:ss');
+});
+// ##############################
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue

@@ -21,3 +21,4 @@ Route::apiResources([
 ]);
 
 Route::get('/conversation/{id}', 'API\MessagesController@getMessagesFor')->name('conversation.allmessages');
+Route::post('/accept-dealer', 'API\DealersController@acceptDealer')->name('dealers.accept');

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Dealer;
+use Illuminate\Support\Facades\Hash;
+use Str;
+use App\User;
 
 class DealersController extends Controller
 {
@@ -66,6 +69,44 @@ class DealersController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $dealer = Dealer::findOrFail($id);
+        $dealer->delete();
+
+        return ['message' => 'Başvuru silindi'];
+    }
+
+
+    // custom functions
+    public function acceptDealer(Request $request) {
+        // check if this dealer was accepted before
+        if(User::where('email', '=', $request->email)->count() > 0) {
+            return [
+                'status' => 'mailerror',
+                'message' => 'Bu e-posta adresine sahip bir kullanıcı sistemde zaten kayıtlı',
+            ];
+        }
+        // this function gets dealer information and adds it as a user
+        // pay attention to user role
+        // generate raw password to send user with email
+        $password = Str::random(8);
+        $hashed_password = Hash::make($password);
+        $newUser = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'password' => $hashed_password,
+            'user_role' => 'user',
+        ]);
+        // is new user is created then remove it from dealer applications
+        if($newUser) {
+            $this->destroy($request->id);
+            return [
+                'status' => 'success',
+                'user_message' => 'User is created',
+                'dealer_message' => 'Application is deleted',
+            ];
+        } else {
+            return ['message' => 'Error while processing'];
+        }
     }
 }
