@@ -33,15 +33,23 @@
                     <ul class="navbar-nav mr-auto">
                         @auth
                             <li class="nav-item">
-                                <router-link class="nav-link" to="/home">Home
-                                    <span class="sr-only">(current)</span>
-                                </router-link>
+                                <router-link class="nav-link" to="/home">Home</router-link>
                             </li>
-                            <li class="nav-item">
-                                <router-link class="nav-link" to="/dealers">Anwendungsliste</router-link>
-                            </li>
+                            @can('isAdmin')
+                                <li class="nav-item">
+                                    <router-link class="nav-link" to="/users">Benutzerlist
+                                        <span class="sr-only">(current)</span>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item">
+                                    <router-link class="nav-link" to="/dealers">Anwendungsliste</router-link>
+                                </li>
+                            @endcan
                             <li class="nav-item">
                                 <router-link class="nav-link" to="/dealer-chat">Händlerchat</router-link>
+                            </li>
+                            <li class="nav-item">
+                                <router-link class="nav-link" to="/profile">Profil</router-link>
                             </li>
                         @else
                         <li class="nav-item">
@@ -99,6 +107,11 @@
         </footer>
     </div>
     <!-- Scripts -->
+    @auth
+        <script>
+            window.user = @json(auth()->user())
+        </script>
+    @endauth
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <div class="row justify-content-center">
+        <div class="row justify-content-center" v-if="$gate.isAdmin()">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
@@ -61,6 +61,7 @@
                 </div>
             </div>
         </div>
+        <not-found v-if="!$gate.isAdmin()"></not-found>
     </div>
 </template>
 
@@ -73,6 +74,13 @@
             }
         },
         methods: {
+            checkIfAuthorized() {
+                if(this.user.user_role !== 'admin'){
+                    return false;
+                } else {
+                    return true;
+                }
+            },
             acceptDealer(dealer) {
                 axios.post('/api/accept-dealer', {
                     id: dealer.id,
@@ -139,13 +147,22 @@
                 axios.get(`/api/dealers?page=${page}`)
                 .then((response) => {
                     this.dealers = response.data;
+                }).catch((response) => {
+                    swal.fire(
+                        'İşlem başarısız!',
+                        'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz',
+                        'error',
+                    );
                 });
             },
         },
         created() {
-            this.getAllDealers();
-            FireEvent.$on('AfterDeleted', this.getAllDealers);
-            FireEvent.$on('AfterAccepted', this.getAllDealers);
+            // let this work only if the authenticated user is admin
+            if(this.$gate.isAdmin()){
+                this.getAllDealers();
+                FireEvent.$on('AfterDeleted', this.getAllDealers);
+                FireEvent.$on('AfterAccepted', this.getAllDealers);
+            }
         }
     }
 </script>

@@ -65,8 +65,16 @@ let routes = [
         component: require('./components/Dealers.vue').default
     },
     {
+        path: '/users',
+        component: require('./components/Users.vue').default
+    },
+    {
         path: '/dealer-chat',
         component: require('./components/ChatApp.vue').default
+    },
+    {
+        path: '/profile',
+        component: require('./components/Profil.vue').default
     },
     {
         path: '*',
@@ -101,6 +109,12 @@ Vue.filter('customDate', function(dateTime) {
     return moment(dateTime).format('D MMM YYYY, H:mm:ss');
 });
 // ##############################
+
+// # For Global Frontend Authentication
+import Gate from './Gate';
+// We want to access gate class everywhere from application
+Vue.prototype.$gate = new Gate(window.user);
+// ########################
 
 /**
  * The following block of code may be used to automatically register your

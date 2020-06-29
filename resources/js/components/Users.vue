@@ -1,16 +1,18 @@
 <template>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-12">
+    <div class="container-fluid">
+        <div class="row justify-content-center" v-if="$gate.isAdmin()">
+            <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Wie mann benutzt diese sistem</div>
+                    <div class="card-header">Benutzer List</div>
 
                     <div class="card-body">
-                        System info
+                        Benutzer wurde gelistet hier.
                     </div>
                 </div>
             </div>
         </div>
+
+    <not-found v-if="!$gate.isAdmin()"></not-found>
     </div>
 </template>
 

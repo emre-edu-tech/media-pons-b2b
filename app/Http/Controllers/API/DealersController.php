@@ -24,6 +24,7 @@ class DealersController extends Controller
      */
     public function index()
     {
+        $this->authorize('isAdmin');
         return Dealer::latest()->paginate(20);
     }
 
@@ -69,6 +70,8 @@ class DealersController extends Controller
      */
     public function destroy($id)
     {
+        $this->authorize('isAdmin');
+
         $dealer = Dealer::findOrFail($id);
         $dealer->delete();
 
@@ -78,6 +81,8 @@ class DealersController extends Controller
 
     // custom functions
     public function acceptDealer(Request $request) {
+        $this->authorize('isAdmin');
+        
         // check if this dealer was accepted before
         if(User::where('email', '=', $request->email)->count() > 0) {
             return [
