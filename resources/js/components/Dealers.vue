@@ -74,13 +74,6 @@
             }
         },
         methods: {
-            checkIfAuthorized() {
-                if(this.user.user_role !== 'admin'){
-                    return false;
-                } else {
-                    return true;
-                }
-            },
             acceptDealer(dealer) {
                 axios.post('/api/accept-dealer', {
                     id: dealer.id,
@@ -144,25 +137,25 @@
                 })
             },
             getAllDealers(page = 1) {
-                axios.get(`/api/dealers?page=${page}`)
-                .then((response) => {
-                    this.dealers = response.data;
-                }).catch((response) => {
-                    swal.fire(
-                        'İşlem başarısız!',
-                        'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz',
-                        'error',
-                    );
-                });
+                if(this.$gate.isAdmin()){
+                    axios.get(`/api/dealers?page=${page}`)
+                    .then((response) => {
+                        this.dealers = response.data;
+                    }).catch((response) => {
+                        swal.fire(
+                            'İşlem başarısız!',
+                            'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz',
+                            'error',
+                        );
+                    });
+                }
             },
         },
         created() {
             // let this work only if the authenticated user is admin
-            if(this.$gate.isAdmin()){
-                this.getAllDealers();
-                FireEvent.$on('AfterDeleted', this.getAllDealers);
-                FireEvent.$on('AfterAccepted', this.getAllDealers);
-            }
+            this.getAllDealers();
+            FireEvent.$on('AfterDeleted', this.getAllDealers);
+            FireEvent.$on('AfterAccepted', this.getAllDealers);
         }
     }
 </script>
