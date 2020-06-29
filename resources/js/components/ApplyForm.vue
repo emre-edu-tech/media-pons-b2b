@@ -84,9 +84,15 @@
                                 </div>
                             </div>
 
+                            <div class="form-group row">
+                                <label for="accept-info" class="col-md-8 offset-md-4">
+                                    <input type="checkbox" v-model="accepted" :checked="accepted" @change="checkAcceptance" name="accept-info" id="accept-info"> Gönderdiğim bilgilerimin doğru olduğunu kabul ediyorum. Bilgilerimin yanlışlığından doğacak aksaklıklardan sorumlu olduğumu taahhüt ediyorum.
+                                </label>
+                            </div>
+
                             <div class="form-group row mb-0">
                                 <div class="col-md-8 offset-md-4">
-                                    <button type="submit" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
+                                    <button type="submit" id="send-info" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
                                 </div>
                             </div>
                         </form>
@@ -102,6 +108,7 @@
         data() {
             return {
                 handler: '',
+                accepted: false,
                 form: new Form({
                     company_name: '',
                     name: '',
@@ -115,6 +122,13 @@
             }
         },
         methods: {
+            checkAcceptance(event) {
+                if(!this.accepted) {
+                    $('#send-info').prop('disabled', true);
+                } else {
+                    $('#send-info').prop('disabled', false);
+                }
+            },
             updateRegForm(event) {
                 // Here event parameter will contain the file that we want to upload
                 let file = event.target.files[0];
