@@ -92,7 +92,7 @@
 
                             <div class="form-group row mb-0">
                                 <div class="col-md-8 offset-md-4">
-                                    <button type="submit" id="send-info" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
+                                    <button type="submit" id="send-info" disabled="disabled" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
                                 </div>
                             </div>
                         </form>
