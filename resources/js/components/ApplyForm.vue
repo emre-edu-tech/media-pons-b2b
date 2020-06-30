@@ -124,8 +124,10 @@
         methods: {
             checkAcceptance(event) {
                 if(!this.accepted) {
+                    $('#send-info').css('cursor', 'not-allowed');
                     $('#send-info').prop('disabled', true);
                 } else {
+                    $('#send-info').css('cursor', 'pointer');
                     $('#send-info').prop('disabled', false);
                 }
             },

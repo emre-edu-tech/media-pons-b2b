@@ -14,6 +14,10 @@
 @import '~@fortawesome/fontawesome-free/scss/solid.scss';
 
 // Custom styles
+#send-info:hover {
+    cursor: not-allowed;
+}
+
 main {
     height: 90vh;
     overflow: auto;
