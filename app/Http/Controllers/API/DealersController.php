@@ -8,6 +8,7 @@ use App\Dealer;
 use Illuminate\Support\Facades\Hash;
 use Str;
 use App\User;
+use Mail;
 
 class DealersController extends Controller
 {
@@ -78,11 +79,32 @@ class DealersController extends Controller
         return ['message' => 'Başvuru silindi'];
     }
 
+    public function sendEmail($user, $password) {
+        // send mail to the user with his password and mail
+        $mailError = "";
+        try {
+            Mail::send('templates.mail.user-confirmation-mail', ['user' => $user, 'password' => $password], function($mail) use ($user, $password){
+                $mail->from('info@2brothers-tobacco.de', '2 Brothers Tobacco');
+                $mail->to($user->email, $user->name);
+                $mail->subject('2 Brothers Tobacco - Kullanıcı Bilgileriniz');
+            });
+        } catch (Exception $e) {
+            if ($e) {
+                $mailError = "Fehler beim Senden <strong>Kunden-E-Mail</strong>. Möglicherweise liegt ein Problem mit Ihrer Internetverbindung vor.";
+            }
+        }
+
+        if($mailError) {
+            return $mailError;
+        } else {
+            'Mail sent successfully';
+        }
+    }
 
     // custom functions
     public function acceptDealer(Request $request) {
         $this->authorize('isAdmin');
-        
+
         // check if this dealer was accepted before
         if(User::where('email', '=', $request->email)->count() > 0) {
             return [
@@ -104,14 +126,17 @@ class DealersController extends Controller
         ]);
         // is new user is created then remove it from dealer applications
         if($newUser) {
+            // send an email with user credentials
+            $mailStatus = $this->sendEmail($newUser, $password);
             $this->destroy($request->id);
             return [
                 'status' => 'success',
                 'user_message' => 'User is created',
                 'dealer_message' => 'Application is deleted',
+                'mail_message' => $mailStatus,
             ];
         } else {
-            return ['message' => 'Error while processing'];
+            return ['message' => 'Yeni kullanıcı yaratılırken hata oluştu.'];
         }
     }
 }

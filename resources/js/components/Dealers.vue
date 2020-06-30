@@ -85,7 +85,7 @@
                         FireEvent.$emit('AfterAccepted'),
                         swal.fire(
                             'İşlem başarılı!',
-                            'Başvuru kabul edildi. Kullanıcı sisteme eklendi',
+                            'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
                             'success',
                         );
                     } else if(response.data.status == 'mailerror') {
