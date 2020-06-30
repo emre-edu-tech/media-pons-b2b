@@ -20,5 +20,12 @@ Route::apiResources([
     'dealers' => 'API\DealersController',
 ]);
 
+// MessagesController
 Route::get('/conversation/{id}', 'API\MessagesController@getMessagesFor')->name('conversation.allmessages');
+
+// DealersController
 Route::post('/accept-dealer', 'API\DealersController@acceptDealer')->name('dealers.accept');
+
+// Users Controller
+Route::get('/profile', 'API\UsersController@profile')->name('users.profile');
+Route::put('/profile', 'API\UsersController@updateProfile')->name('users.profile.update');

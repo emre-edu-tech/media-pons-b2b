@@ -74,7 +74,7 @@ let routes = [
     },
     {
         path: '/profile',
-        component: require('./components/Profil.vue').default
+        component: require('./components/Profile.vue').default
     },
     {
         path: '*',
