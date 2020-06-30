@@ -75,6 +75,7 @@
         },
         methods: {
             acceptDealer(dealer) {
+                this.$Progress.start();
                 axios.post('/api/accept-dealer', {
                     id: dealer.id,
                     name: dealer.name,
@@ -88,12 +89,14 @@
                             'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
                             'success',
                         );
+                        this.$Progress.finish();
                     } else if(response.data.status == 'mailerror') {
                         swal.fire(
                             'İşlem başarısız!',
                             response.data.message,
                             'error',
                         );
+                        this.$Progress.fail();
                     }
                 });
             },

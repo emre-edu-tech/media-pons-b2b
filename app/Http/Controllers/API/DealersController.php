@@ -97,7 +97,7 @@ class DealersController extends Controller
         if($mailError) {
             return $mailError;
         } else {
-            'Mail sent successfully';
+            return 'Mail sent successfully';
         }
     }
 
