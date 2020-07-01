@@ -10,12 +10,18 @@ use DB;
 use Image;
 use File;
 use Illuminate\Support\Facades\Hash;
+use Storage;
 
 class UsersController extends Controller
 {
 
     public function __construct() {
         $this->middleware('auth:api');
+    }
+
+    public function getAllUsers() {
+        $this->authorize('isAdmin');
+        return User::where('id', '!=', auth('api')->user()->id)->latest()->paginate(20);
     }
 
     /**
@@ -87,7 +93,27 @@ class UsersController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $this->authorize('isAdmin');
+
+        $user = User::findOrFail($id);
+        if($user->delete()){
+            // documents that are user related must also be deleted
+            // save files
+            $save_path = 'documents/';
+            Storage::disk('public')->delete([
+                $save_path.$user->business_registration_form,
+                $save_path.$user->id_card
+            ]);
+
+            $mailStatus = sendNotificationEmail($user, null, 'templates.mail.user-delete-mail', 'Kaydınız silindi.');
+
+            return [
+                'message' => 'Kullanıcı silindi',
+                'mail_message' => $mailStatus
+            ];
+        } else {
+            return ['message' => 'Sunucu hatası. Kullanıcı silinemedi'];
+        }
     }
 
     // methods about profile info

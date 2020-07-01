@@ -37,6 +37,9 @@
         }
     },
     "autoload": {
+        "files": [
+            "app/Helpers/MailHelpers.php"
+        ],
         "psr-4": {
             "App\\": "app/"
         },

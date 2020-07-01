@@ -1,0 +1,1 @@
+<p>Ihr Antrag wurde von unserer Firma abgelehnt</p>

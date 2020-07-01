@@ -1,0 +1,1 @@
+<p>Ihre Benutzerregistrierung wurde von unserer Firma gelöscht.</p>

@@ -81,9 +81,14 @@
                     name: dealer.name,
                     email: dealer.email,
                     phone_number: dealer.phone,
+                    company_name: dealer.company_name,
+                    business_registration_form: dealer.business_registration_form,
+                    id_card: dealer.id_card,
+                    tax_number: dealer.tax_number,
+                    bio: dealer.description,
                 }).then((response) => {
                     if(response.data.status == 'success') {
-                        FireEvent.$emit('AfterAccepted'),
+                        FireEvent.$emit('AfterDealerAccepted'),
                         swal.fire(
                             'İşlem başarılı!',
                             'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
@@ -114,12 +119,12 @@
                     if(result.value) {
                         // Send ajax request to delete it
                         this.form.delete(`/api/dealers/${id}`)
-                        .then(() => {
+                        .then((response) => {
                             // Broadcast the event     
-                            FireEvent.$emit('AfterDeleted');
+                            FireEvent.$emit('AfterDealerDeleted');
                             swal.fire(
                                 'Silindi!',
-                                'Başvuru silindi',
+                                'Başvuru silindi. Bilgisi kullanıcıya gönderildi',
                                 'success',
                             );
                             
@@ -157,8 +162,8 @@
         created() {
             // let this work only if the authenticated user is admin
             this.getAllDealers();
-            FireEvent.$on('AfterDeleted', this.getAllDealers);
-            FireEvent.$on('AfterAccepted', this.getAllDealers);
+            FireEvent.$on('AfterDealerDeleted', this.getAllDealers);
+            FireEvent.$on('AfterDealerAccepted', this.getAllDealers);
         }
     }
 </script>

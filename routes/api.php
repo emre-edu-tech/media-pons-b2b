@@ -29,3 +29,4 @@ Route::post('/accept-dealer', 'API\DealersController@acceptDealer')->name('deale
 // Users Controller
 Route::get('/profile', 'API\UsersController@profile')->name('users.profile');
 Route::put('/profile', 'API\UsersController@updateProfile')->name('users.profile.update');
+Route::get('/get-users','API\UsersController@getAllUsers')->name('users.all');

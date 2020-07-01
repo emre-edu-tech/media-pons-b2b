@@ -8,7 +8,7 @@ use App\Dealer;
 use Illuminate\Support\Facades\Hash;
 use Str;
 use App\User;
-use Mail;
+use Storage;
 
 class DealersController extends Controller
 {
@@ -74,31 +74,50 @@ class DealersController extends Controller
         $this->authorize('isAdmin');
 
         $dealer = Dealer::findOrFail($id);
-        $dealer->delete();
+        if($dealer->delete()) {
+            $save_path = 'documents/';
+            Storage::disk('public')->delete([
+                $save_path.$dealer->business_registration_form,
+                $save_path.$dealer->id_card
+            ]);
 
-        return ['message' => 'Başvuru silindi'];
+            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-reject-mail', 'Başvurunuz reddedildi');
+
+            return [
+                'message' => 'Başvuru silindi',
+                'mail_message' => $mailStatus,
+            ];
+        } else {
+            return ['message' => 'Sunucu hatası. Başvuru silinemedi'];
+        }
     }
 
-    public function sendEmail($user, $password) {
-        // send mail to the user with his password and mail
-        $mailError = "";
-        try {
-            Mail::send('templates.mail.user-confirmation-mail', ['user' => $user, 'password' => $password], function($mail) use ($user, $password){
-                $mail->from('info@2brothers-tobacco.de', '2 Brothers Tobacco');
-                $mail->to($user->email, $user->name);
-                $mail->subject('2 Brothers Tobacco - Kullanıcı Bilgileriniz');
-            });
-        } catch (Exception $e) {
-            if ($e) {
-                $mailError = "Fehler beim Senden <strong>Kunden-E-Mail</strong>. Möglicherweise liegt ein Problem mit Ihrer Internetverbindung vor.";
-            }
-        }
+    // public function sendEmail($user, $password = null, $mailTemplate, $subject) {
+    //     // send mail to the user with his password and mail
+    //     $mailError = "";
+    //     try {
+    //         Mail::send($mailTemplate, ['user' => $user, 'password' => $password, 'subject' => $subject], function($mail) use ($user, $password, $subject){
+    //             $mail->from('info@2brothers-tobacco.de', '2 Brothers Tobacco');
+    //             $mail->to($user->email, $user->name);
+    //             $mail->subject('2 Brothers Tobacco - ' . $subject);
+    //         });
+    //     } catch (Exception $e) {
+    //         if ($e) {
+    //             $mailError = "Fehler beim Senden <strong>Kunden-E-Mail</strong>. Möglicherweise liegt ein Problem mit Ihrer Internetverbindung vor.";
+    //         }
+    //     }
 
-        if($mailError) {
-            return $mailError;
-        } else {
-            return 'Mail sent successfully';
-        }
+    //     if($mailError) {
+    //         return $mailError;
+    //     } else {
+    //         return 'Mail sent successfully';
+    //     }
+    // }
+
+    public function removeDealerEntry($id) {
+        // This function just removes the dealer entry from dealers table
+        $dealer = Dealer::findOrFail($id);
+        $dealer->delete();
     }
 
     // custom functions
@@ -118,17 +137,22 @@ class DealersController extends Controller
         $password = Str::random(8);
         $hashed_password = Hash::make($password);
         $newUser = User::create([
+            'company_name' => $request->company_name,
+            'business_registration_form' => $request->business_registration_form,
+            'id_card' => $request->id_card,
+            'tax_number' => $request->tax_number,
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => $hashed_password,
+            'bio' => $request->bio,
             'user_role' => 'user',
         ]);
         // is new user is created then remove it from dealer applications
         if($newUser) {
             // send an email with user credentials
-            $mailStatus = $this->sendEmail($newUser, $password);
-            $this->destroy($request->id);
+            $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Kullanıcı Giriş Bilgileri');
+            $this->removeDealerEntry($request->id);
             return [
                 'status' => 'success',
                 'user_message' => 'User is created',
