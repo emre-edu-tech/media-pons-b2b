@@ -33,7 +33,11 @@ class UsersController extends Controller
     public function index()
     {
         // get all users except the authenticated one
-        $users = User::where('id', '!=', auth('api')->user()->id)->get();
+        if(auth('api')->user()->user_role == 'admin') {
+            $users = User::where('id', '!=', auth('api')->user()->id)->get();
+        } else {
+            $users = User::where('id', '!=', auth('api')->user()->id)->where('user_role', '=', 'admin')->get();
+        }
 
         $unreadIds = Message::select(DB::raw('`from_user` as sender_id, count(`from_user`) as messages_count'))
             ->where('to_user', auth('api')->user()->id)
