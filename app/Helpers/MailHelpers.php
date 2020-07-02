@@ -13,6 +13,7 @@ if (! function_exists('sendNotificationEmail')) {
         } catch (Exception $e) {
             if ($e) {
                 $mailError = "Fehler beim Senden <strong>Kunden-E-Mail</strong>. Möglicherweise liegt ein Problem mit Ihrer Internetverbindung vor.";
+                // $mailError = $e->getMessage();
             }
         }
 

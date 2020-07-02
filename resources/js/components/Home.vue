@@ -2,11 +2,19 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-12">
+                <h2>Willkommen beim 2 Brothers Tobacco Dealer Management System</h2>
                 <div class="card">
-                    <div class="card-header">Wie mann benutzt diese sistem</div>
+                    <div class="card-header">Hallo, <strong>{{ user.name }}</strong></div>
 
                     <div class="card-body">
-                        System info
+                        <p>Sie können Folgendes tun, indem Sie dieses System als System <strong>{{ user.user_role }}</strong> verwenden.</p>
+                        <div class="list-group">
+                            <a href="/users" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen registrierte Benutzer</a>
+                            <a href="/dealers" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen Händler Anwendungen</a>
+                            <a href="/dealer-chat" class="list-group-item list-group-item-action">{{ $gate.isAdmin() ? 'Chat mit Händlern' : 'Chat mit dem Systemadministrator' }}</a>
+                            <a href="/profile" class="list-group-item list-group-item-action">Siehe Profil Informationen</a>
+                            <a href="/logout" class="list-group-item list-group-item-action">Anmelden</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -16,8 +24,28 @@
 
 <script>
     export default {
-        mounted() {
-            console.log('Component mounted.')
+        data() {
+            return {
+                user: '',
+            }
+        },
+        methods: {
+            getAuthenticatedUser() {
+                axios.get('/api/profile')
+                .then((response) => {
+                    this.user = response.data;
+                })
+                .catch(() => {
+                    swal.fire(
+                        'Hata!',
+                        'Kullanıcı bilgileri getirilirken hata oluştu. Internet bağlantınızı kontrol edin.',
+                        'error',
+                    );
+                });
+            }
+        },
+        created() {
+          this.getAuthenticatedUser();  
         }
     }
 </script>

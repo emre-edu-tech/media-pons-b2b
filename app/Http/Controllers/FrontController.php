@@ -51,7 +51,7 @@ class FrontController extends Controller
 
             
             // Create the dealer
-            return Dealer::create([
+            $dealer =  Dealer::create([
                 'company_name' => $request->company_name,
                 'name' => $request->name,
                 'email' => $request->email,
@@ -60,6 +60,14 @@ class FrontController extends Controller
                 'business_registration_form' => $name . '-' .$filename_business_reg_form,
                 'id_card' => $name . '-' .$filename_id_card,
                 'tax_number' => $request->tax_number
+            ]);
+
+            // send dealer candidate an email that we got his application
+            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-form-notification-mail', 'Application received');
+
+            return response()->json([
+                'message' => 'Message successfully sent',
+                'mail_message' => $mailStatus,
             ]);
         } else {
             return response()->json([

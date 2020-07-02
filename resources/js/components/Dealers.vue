@@ -3,14 +3,11 @@
         <div class="row justify-content-center" v-if="$gate.isAdmin()">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h3 class="card-title">Händleranwendungen</h3>
 
                         <div class="card-tools">
                             <span class="mr-2"><strong>Düzenleme ve silme işlemini ancak admin kullanıcısı yapabilir</strong></span>
-                            <button type="button" class="btn btn-success">
-                              Neue Händler <i class="fas fa-plus fa-fw"></i>
-                            </button>
                         </div>
                     </div>
                     <!-- /.card-header -->
@@ -106,6 +103,7 @@
                 });
             },
             rejectDealer(id) {
+                this.$Progress.start();
                 swal.fire({
                     title: 'Emin misiniz?',
                     text: 'Silme işlemi geri alınamaz',
@@ -127,13 +125,14 @@
                                 'Başvuru silindi. Bilgisi kullanıcıya gönderildi',
                                 'success',
                             );
-                            
+                        this.$Progress.finish();
                         }).catch(() => {
                             swal.fire(
                                 'Silme başarısız!',
                                 'Sunucuda hata oluştu',
                                 'error',
                             );
+                            this.$Progress.fail();
                         });
                     } else if (result.dismiss === swal.DismissReason.cancel) {
                         swal.fire(
@@ -141,6 +140,7 @@
                             'Başvuru silme işlemi kullanıcı tarafından iptal edildi',
                             'warning',
                         );
+                        this.$Progress.fail();
                     }
                 })
             },

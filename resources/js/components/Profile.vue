@@ -166,7 +166,7 @@
                 })
                 .catch(() => {
                     // error when getting user
-                })
+                });
             }
         },
         created () {

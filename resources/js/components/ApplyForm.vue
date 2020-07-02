@@ -92,7 +92,7 @@
 
                             <div class="form-group row mb-0">
                                 <div class="col-md-8 offset-md-4">
-                                    <button type="submit" id="send-info" disabled="disabled" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
+                                    <button v-show="!editMode" type="submit" class="btn btn-success btn-block">Speichern</button>
                                 </div>
                             </div>
                         </form>
@@ -181,7 +181,7 @@
                 .then(() => {
                     swal.fire(
                         'Başarılı!',
-                        'Bilgileriniz gönderildi',
+                        'Bilgileriniz gönderildi. Onaylama maili verdiğiniz mail adresine gönderildi.',
                         'success',
                     );
                     this.$Progress.finish();
@@ -193,7 +193,7 @@
                 .catch(() => {
                     swal.fire(
                         'Hata!',
-                        'Bilgileriniz gönderilirken hata oluştu. Tekrar deneyin.',
+                        'Bilgileriniz gönderilirken hata oluştu. Bilgilerinizi kontrol edip tekrar deneyin.',
                         'error',
                     );
                     this.$Progress.fail();
