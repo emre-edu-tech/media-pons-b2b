@@ -11,6 +11,7 @@ use Image;
 use File;
 use Illuminate\Support\Facades\Hash;
 use Storage;
+use Str;
 
 class UsersController extends Controller
 {
@@ -59,7 +60,80 @@ class UsersController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('isAdmin');
+
+        // check if this user is already in database
+        if(User::where('email', '=', $request->email)->count() > 0) {
+            return [
+                'status' => 'mailerror',
+                'message' => 'Bu e-posta adresine sahip bir kullanıcı sistemde zaten kayıtlı',
+            ];
+        }
+
+        // Validation
+        $this->validate($request, [
+            'company_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:50',
+            'description' => 'required|string',
+            'business_registration_form' => 'required|mimes:pdf,doc,docx',
+            'id_card' => 'required|mimes:pdf,doc,docx',
+            'tax_number' => 'required|string',
+        ]);
+
+        if($request->hasFile('business_registration_form') && $request->hasFile('id_card')) {
+            // get files
+            $business_registration_form = $request->business_registration_form;
+            $id_card = $request->id_card;
+            $name = Str::slug($request->name);
+
+            $file_extension_business_reg_form = pathinfo($business_registration_form->getClientOriginalName(), PATHINFO_EXTENSION);
+            $file_extension_id_card = pathinfo($id_card->getClientOriginalName(), PATHINFO_EXTENSION);
+
+            $filename_business_reg_form =   time() . '.' . $file_extension_business_reg_form;
+            $filename_id_card = (time() + 1) . '.' . $file_extension_id_card;
+
+            // save files
+            $save_path = 'documents/';
+
+            Storage::disk('public')->put($save_path.$name . '-' .$filename_business_reg_form, File::get($business_registration_form));
+            Storage::disk('public')->put($save_path.$name . '-' .$filename_id_card, File::get($id_card));
+
+            
+            // generate raw password to send user with email
+            $password = Str::random(8);
+            $hashed_password = Hash::make($password);
+            $newUser = User::create([
+                'company_name' => $request->company_name,
+                'business_registration_form' => $name . '-' .$filename_business_reg_form,
+                'id_card' => $name . '-' .$filename_id_card,
+                'tax_number' => $request->tax_number,
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone_number' => $request->phone,
+                'password' => $hashed_password,
+                'bio' => $request->description,
+                'user_role' => 'user',
+            ]);
+
+            // is new user is created then remove it from dealer applications
+            if($newUser) {
+                // send an email with user credentials
+                $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Kullanıcı Giriş Bilgileri');
+                return [
+                    'status' => 'success',
+                    'user_message' => 'User is created',
+                    'mail_message' => $mailStatus,
+                ];
+            } else {
+                return ['message' => 'Yeni kullanıcı yaratılırken hata oluştu.'];
+            }
+        } else {
+            return response()->json([
+                'message' => 'Server error! Error while uploading files!',
+            ]);
+        }
     }
 
     /**

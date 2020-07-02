@@ -94,12 +94,18 @@
                         this.$Progress.finish();
                     } else if(response.data.status == 'mailerror') {
                         swal.fire(
-                            'İşlem başarısız!',
-                            response.data.message,
+                            'Kullanıcı kayıtlı!',
+                            `${response.data.message}`,
                             'error',
                         );
-                        this.$Progress.fail();
+                        this.$Progress.finish();
                     }
+                }).catch(() => {
+                    swal.fire(
+                        'İşlem başarısız!',
+                        response.data.message,
+                        'error',
+                    );
                 });
             },
             rejectDealer(id) {

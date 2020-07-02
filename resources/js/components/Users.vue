@@ -61,7 +61,7 @@
             </div>
             <!-- Modal -->
             <div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="userModalLabel">Neuen Benutzer hinzufügen</h5>
@@ -69,7 +69,7 @@
                             <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <form @submit.prevent="createUser()">
+                        <form @submit.prevent="saveNewUser()">
                             <div class="modal-body">
                                 <div class="form-group row">
                                     <label for="company_name" class="col-md-4 col-form-label">Şirket Adı</label>
@@ -176,10 +176,50 @@
             newUserModal() {
                 // clear the errors
                 this.form.clear();
-                // reset the modal form
+                // reset the modal form including file inputs
+                $("#business_registration_form").val("");
+                $("#id_card").val("");
                 this.form.reset();
                 // show modal for creating category
                 $('#userModal').modal('show');
+            },
+
+            saveNewUser() {
+                this.$Progress.start();
+                this.form.submit('post', '/api/users', {
+                    transformRequest: [function (data, headers) {
+                        return objectToFormData(data)
+                    }],
+                })
+                .then((response) => {
+                    // Fire a custom event after user created
+                    FireEvent.$emit('AfterUserCreated');
+                    // Hide modal window
+                    $('#userModal').modal('hide');
+                    if(response.data.status == 'success') {
+                        FireEvent.$emit('AfterDealerAccepted'),
+                        swal.fire(
+                            'İşlem başarılı!',
+                            'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
+                            'success',
+                        );
+                        this.$Progress.finish();
+                    } else if(response.data.status == 'mailerror') {
+                        swal.fire(
+                            'Mail hatası!',
+                            `Kullanıcı eklendi fakat ${response.data.message}`,
+                            'warning',
+                        );
+                        this.$Progress.finish();
+                    }
+                })
+                .catch(() => {
+                    toast.fire({
+                        icon: 'error',
+                        title: 'Kullanıcı eklenirken hata oluştu. Lütfen tekrar deneyiniz.',
+                    });
+                    this.$Progress.fail();
+                });
             },
             
             updateRegForm(event) {
@@ -279,6 +319,7 @@
         created() {
             this.getAllUsers();
             FireEvent.$on('AfterUserDeleted', this.getAllUsers);
+            FireEvent.$on('AfterUserCreated', this.getAllUsers);
         }
     }
 </script>

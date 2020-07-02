@@ -92,7 +92,7 @@
 
                             <div class="form-group row mb-0">
                                 <div class="col-md-8 offset-md-4">
-                                    <button v-show="!editMode" type="submit" class="btn btn-success btn-block">Speichern</button>
+                                    <button type="submit" id="send-info" disabled="disabled" @click.prevent="registerInfo" class="btn btn-success btn-block">Bilgileri Yükle</button>
                                 </div>
                             </div>
                         </form>
@@ -136,10 +136,6 @@
                 let file = event.target.files[0];
                 let reader = new FileReader();
                 if(file.size < (2 * 1024 * 1024)) {
-                    // reader.onloadend = (file) => {
-                    //     this.form.business_registration_form = reader.result;
-                    // }
-                    // reader.readAsDataURL(file);
                     this.form.business_registration_form = file;
                 } else {
                     swal.fire(
@@ -156,10 +152,6 @@
                 let reader = new FileReader();
                 
                 if(file.size < (2 * 1024 * 1024)) {
-                // reader.onloadend = (file) => {
-                //     this.form.id_card = reader.result;
-                // }
-                // reader.readAsDataURL(file);
                 this.form.id_card = file;
                 } else {
                     swal.fire(
@@ -187,7 +179,9 @@
                     this.$Progress.finish();
                     // clear the errors
                     this.form.clear();
-                    // reset the modal form
+                    // reset form including file inputs
+                    $("#business_registration_form").val("");
+                    $("#id_card").val("");
                     this.form.reset();
                 })
                 .catch(() => {
