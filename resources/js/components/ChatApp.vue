@@ -83,6 +83,7 @@
         mounted() {
             Echo.private(`messages.${this.user.id}`)
                 .listen('NewMessage', (event) => {
+                    console.log(event);
                     this.handleIncomingMessage(event.message);
                 });
             this.getListOfContacts();
