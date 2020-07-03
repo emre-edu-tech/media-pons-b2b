@@ -88540,7 +88540,9 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   key: "0bbc994d4386b7587125",
   cluster: "eu",
   encrypted: true,
-  host: process.env.MIX_PUSHER_APP_URL
+  host: process.env.MIX_PUSHER_APP_URL // port: 443,
+  // scheme: 'https',
+
 });
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../node_modules/process/browser.js */ "./node_modules/process/browser.js")))
 

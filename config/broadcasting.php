@@ -38,6 +38,9 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'useTLS' => true,
+                // 'host' => env('APP_URL'),
+                // 'port' => 443,
+                // 'scheme' => 'https',
             ],
         ],
 
