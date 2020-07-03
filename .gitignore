@@ -2,6 +2,7 @@
 /public/hot
 /public/storage
 /public/img/profile
+/config/broadcasting.php
 /storage/*.key
 /vendor
 .env
