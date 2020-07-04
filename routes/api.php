@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Broadcast::routes(['middleware' => ['auth:api']]);
+
 Route::apiResources([
     'users' => 'API\UsersController',
     'messages' => 'API\MessagesController',
