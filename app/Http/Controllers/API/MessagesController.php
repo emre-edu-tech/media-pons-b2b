@@ -20,7 +20,7 @@ class MessagesController extends Controller
      */
     public function index()
     {
-        //
+        return ['message' => 'you hit index method'];
     }
 
     /**
