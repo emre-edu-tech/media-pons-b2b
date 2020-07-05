@@ -22,9 +22,9 @@ Auth::routes([
 ]);
 
 // MessagesController
+Route::post('/messages', 'MessagesController@store')->name('messages.store');
 Route::get('/conversation/{id}', 'MessagesController@getMessagesFor')->name('conversation.allmessages');
 Route::get('/messages', 'MessagesController@index')->name('messages.index');
-Route::post('/messages', 'MessagesController@store')->name('messages.store');
 
 Route::get('/home', 'HomeController@index')->name('home');
 
