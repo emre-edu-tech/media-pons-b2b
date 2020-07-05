@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -10,7 +10,7 @@ use App\Events\NewMessage;
 class MessagesController extends Controller
 {
     public function __construct() {
-        $this->middleware('auth:api');
+        $this->middleware('auth');
     }
 
     /**
@@ -32,14 +32,14 @@ class MessagesController extends Controller
     public function store(Request $request)
     {
         $message = Message::create([
-            'from_user' => auth('api')->user()->id,
+            'from_user' => auth()->user()->id,
             'to_user' => $request->contact_id,
             'message' => $request->text
         ]);
 
         broadcast(new NewMessage($message));
 
-        return $message;
+        return response()->json($message);
     }
 
     /**
@@ -80,16 +80,16 @@ class MessagesController extends Controller
         // return Message::where('from_user', $contact_id)->orWhere('to_user', $contact_id)->get();
 
         // mark all messages with the selected contact as read
-        Message::where('from_user', $contact_id)->where('to_user', auth('api')->user()->id)->update(['read' => true]);
+        Message::where('from_user', $contact_id)->where('to_user', auth()->user()->id)->update(['read' => true]);
 
         $messages = Message::where(function($query) use ($contact_id) {
-            $query->where('from_user', auth('api')->user()->id);
+            $query->where('from_user', auth()->user()->id);
             $query->where('to_user', $contact_id);
         })->orWhere(function($query) use ($contact_id) {
             $query->where('from_user', $contact_id);
-            $query->where('to_user', auth('api')->user()->id);
+            $query->where('to_user', auth()->user()->id);
         })->get();  // (a = 1 AND b = 2) OR (a = 2 AND b = 1)
 
-        return $messages;
+        return response()->json($messages);
     }
 }

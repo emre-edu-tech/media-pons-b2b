@@ -2153,7 +2153,8 @@ __webpack_require__.r(__webpack_exports__);
       var _this2 = this;
 
       this.updateUnreadCount(contact, true);
-      axios.get("/api/conversation/".concat(contact.id)).then(function (response) {
+      axios.get("/conversation/".concat(contact.id)).then(function (response) {
+        console.log(response);
         _this2.messages = response.data;
         _this2.selectedContact = contact;
       });
@@ -2305,7 +2306,7 @@ __webpack_require__.r(__webpack_exports__);
         return;
       }
 
-      axios.post('/api/messages', {
+      axios.post('/messages', {
         contact_id: this.contact.id,
         text: text
       }).then(function (response) {
@@ -88540,7 +88541,7 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   key: "0bbc994d4386b7587125",
   cluster: "eu",
   encrypted: true,
-  host: "127.0.0.1",
+  host: "b2b-media-pons.localhost",
   port: "80",
   scheme: "http"
 });

@@ -21,6 +21,11 @@ Auth::routes([
     'register' => false,
 ]);
 
+// MessagesController
+Route::get('/conversation/{id}', 'MessagesController@getMessagesFor')->name('conversation.allmessages');
+Route::get('/messages', 'MessagesController@index')->name('messages.index');
+Route::post('/messages', 'MessagesController@store')->name('messages.store');
+
 Route::get('/home', 'HomeController@index')->name('home');
 
 // To keep vue router working even after browser refresh
