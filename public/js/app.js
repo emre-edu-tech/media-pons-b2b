@@ -88540,7 +88540,7 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   key: "0bbc994d4386b7587125",
   cluster: "eu",
   encrypted: true,
-  // host: process.env.MIX_PUSHER_APP_DOMAIN,
+  host: "b2b-media-pons.localhost",
   port: "80",
   scheme: "http"
 });
