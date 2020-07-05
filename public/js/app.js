@@ -2153,8 +2153,7 @@ __webpack_require__.r(__webpack_exports__);
       var _this2 = this;
 
       this.updateUnreadCount(contact, true);
-      axios.get("/conversation/".concat(contact.id)).then(function (response) {
-        console.log(response);
+      axios.get("/api/conversation/".concat(contact.id)).then(function (response) {
         _this2.messages = response.data;
         _this2.selectedContact = contact;
       });
@@ -2306,7 +2305,7 @@ __webpack_require__.r(__webpack_exports__);
         return;
       }
 
-      axios.post('/messages', {
+      axios.post('/api/messages', {
         contact_id: this.contact.id,
         text: text
       }).then(function (response) {

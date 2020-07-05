@@ -44,9 +44,8 @@
 
             startConversationWith(contact) {
                 this.updateUnreadCount(contact, true);
-                axios.get(`/conversation/${contact.id}`)
+                axios.get(`/api/conversation/${contact.id}`)
                 .then((response) => {
-                    console.log(response);
                     this.messages = response.data;
                     this.selectedContact = contact;
                 });

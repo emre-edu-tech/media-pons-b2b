@@ -28,7 +28,7 @@ export default {
                 return;
             }
 
-            axios.post('/messages', {
+            axios.post('/api/messages', {
                 contact_id: this.contact.id,
                 text: text
             }).then((response) => {
