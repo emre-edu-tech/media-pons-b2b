@@ -123,7 +123,7 @@ class DealersController extends Controller
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => $hashed_password,
-            'bio' => $request->bio,
+            'company_description' => $request->description,
             'user_role' => 'user',
         ]);
         // is new user is created then remove it from dealer applications

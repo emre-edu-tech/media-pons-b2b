@@ -82,7 +82,7 @@
                     business_registration_form: dealer.business_registration_form,
                     id_card: dealer.id_card,
                     tax_number: dealer.tax_number,
-                    bio: dealer.description,
+                    description: dealer.description,
                 }).then((response) => {
                     if(response.data.status == 'success') {
                         FireEvent.$emit('AfterDealerAccepted'),

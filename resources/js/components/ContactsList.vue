@@ -3,7 +3,7 @@
         <ul>
             <li v-for="(contact) in sortedContacts" :key="contact.id" @click="selectContact(contact)" :class="{ 'selected': contact == selected }">
                 <div class="avatar">
-                    <img :src="contact.photo == 'profile.png' ? '/img/profile.png' : `/img/profile/${contact.photo}`" :alt="contact.name">
+                    <img class="img-fluid" :src="contact.photo == 'profile.png' ? '/img/profile.png' : `/img/profile/${contact.photo}`" :alt="contact.name">
                 </div>
                 <div class="contact-info">
                     <p class="name">{{ contact.name }}</p>

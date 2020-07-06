@@ -36,7 +36,7 @@
                                     <td>{{ user.company_name }}</td>
                                     <td>{{ user.email }}</td>
                                     <td>{{ user.phone_number }}</td>
-                                    <td>{{ user.bio }}</td>
+                                    <td>{{ user.company_description }}</td>
                                     <td><a target="_blank" :href="`/storage/documents/${user.business_registration_form}`">anzeigen</a></td>
                                     <td><a target="_blank" :href="`/storage/documents/${user.id_card}`">anzeigen</a></td>
                                     <td>{{ user.tax_number }}</td>

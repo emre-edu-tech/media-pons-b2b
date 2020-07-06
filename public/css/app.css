@@ -17074,8 +17074,7 @@ readers do not read off random characters that represent icons */
 }
 
 main {
-  height: 90vh;
-  overflow: auto;
+  min-height: 100vh;
 }
 
 .chat-card-body {

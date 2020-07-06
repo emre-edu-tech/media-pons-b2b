@@ -218,6 +218,10 @@ class UsersController extends Controller
         if(!empty($request->bio)){
             $user->bio = $request->bio;
         }
+
+        if(!empty($request->bio)){
+            $user->company_description = $request->description;
+        }
         
         if(!empty($request->phone_number)){
             $user->phone_number = $request->phone_number;

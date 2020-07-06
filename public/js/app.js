@@ -2081,6 +2081,7 @@ __webpack_require__.r(__webpack_exports__);
 
         $("#business_registration_form").val("");
         $("#id_card").val("");
+        $('#accept-info').prop('checked', false);
 
         _this.form.reset();
       })["catch"](function () {
@@ -2415,7 +2416,7 @@ __webpack_require__.r(__webpack_exports__);
         business_registration_form: dealer.business_registration_form,
         id_card: dealer.id_card,
         tax_number: dealer.tax_number,
-        bio: dealer.description
+        description: dealer.description
       }).then(function (response) {
         if (response.data.status == 'success') {
           FireEvent.$emit('AfterDealerAccepted'), swal.fire('İşlem başarılı!', 'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.', 'success');
@@ -2756,6 +2757,12 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2766,7 +2773,8 @@ __webpack_require__.r(__webpack_exports__);
         email: '',
         bio: '',
         photo: '',
-        password: ''
+        password: '',
+        description: ''
       })
     };
   },
@@ -2834,6 +2842,7 @@ __webpack_require__.r(__webpack_exports__);
         _this3.form.phone_number = _this3.user.phone_number;
         _this3.form.email = _this3.user.email;
         _this3.form.bio = _this3.user.bio;
+        _this3.form.description = _this3.user.company_description;
       })["catch"](function () {// error when getting user
       });
     }
@@ -70669,6 +70678,7 @@ var render = function() {
           [
             _c("div", { staticClass: "avatar" }, [
               _c("img", {
+                staticClass: "img-fluid",
                 attrs: {
                   src:
                     contact.photo == "profile.png"
@@ -72260,7 +72270,7 @@ var render = function() {
                     staticClass: "col-sm-2 col-form-label",
                     attrs: { for: "bio" }
                   },
-                  [_vm._v("Info")]
+                  [_vm._v("Benutzer Info")]
                 ),
                 _vm._v(" "),
                 _c("div", { staticClass: "col-sm-10" }, [
@@ -72287,6 +72297,46 @@ var render = function() {
                           return
                         }
                         _vm.$set(_vm.form, "bio", $event.target.value)
+                      }
+                    }
+                  })
+                ])
+              ]),
+              _vm._v(" "),
+              _c("div", { staticClass: "form-group row" }, [
+                _c(
+                  "label",
+                  {
+                    staticClass: "col-sm-2 col-form-label",
+                    attrs: { for: "description" }
+                  },
+                  [_vm._v("Unternehmen Info")]
+                ),
+                _vm._v(" "),
+                _c("div", { staticClass: "col-sm-10" }, [
+                  _c("textarea", {
+                    directives: [
+                      {
+                        name: "model",
+                        rawName: "v-model",
+                        value: _vm.form.description,
+                        expression: "form.description"
+                      }
+                    ],
+                    staticClass: "form-control",
+                    attrs: {
+                      rows: "5",
+                      id: "description",
+                      placeholder: "Informationen über Unternehmen",
+                      name: "description"
+                    },
+                    domProps: { value: _vm.form.description },
+                    on: {
+                      input: function($event) {
+                        if ($event.target.composing) {
+                          return
+                        }
+                        _vm.$set(_vm.form, "description", $event.target.value)
                       }
                     }
                   })
@@ -72461,7 +72511,7 @@ var render = function() {
                           _vm._v(" "),
                           _c("td", [_vm._v(_vm._s(user.phone_number))]),
                           _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.bio))]),
+                          _c("td", [_vm._v(_vm._s(user.company_description))]),
                           _vm._v(" "),
                           _c("td", [
                             _c(

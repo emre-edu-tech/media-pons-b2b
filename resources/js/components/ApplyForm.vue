@@ -182,6 +182,7 @@
                     // reset form including file inputs
                     $("#business_registration_form").val("");
                     $("#id_card").val("");
+                    $('#accept-info').prop('checked', false);
                     this.form.reset();
                 })
                 .catch(() => {

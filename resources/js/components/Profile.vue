@@ -54,9 +54,15 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label for="bio" class="col-sm-2 col-form-label">Info</label>
+                                <label for="bio" class="col-sm-2 col-form-label">Benutzer Info</label>
                                 <div class="col-sm-10">
                                     <textarea rows="5" class="form-control" id="bio" placeholder="Informationen über sich" name="bio" v-model="form.bio"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="description" class="col-sm-2 col-form-label">Unternehmen Info</label>
+                                <div class="col-sm-10">
+                                    <textarea rows="5" class="form-control" id="description" placeholder="Informationen über Unternehmen" name="description" v-model="form.description"></textarea>
                                 </div>
                             </div>
                             <div class="form-group row">
@@ -99,6 +105,7 @@
                     bio: '',
                     photo: '',
                     password: '',
+                    description: '',
                 }),
             }
         },
@@ -163,6 +170,7 @@
                     this.form.phone_number = this.user.phone_number;
                     this.form.email = this.user.email;
                     this.form.bio = this.user.bio;
+                    this.form.description = this.user.company_description;
                 })
                 .catch(() => {
                     // error when getting user
