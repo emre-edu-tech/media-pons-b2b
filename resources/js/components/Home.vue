@@ -13,7 +13,7 @@
                             <a href="/dealers" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen Händler Anwendungen</a>
                             <a href="/dealer-chat" class="list-group-item list-group-item-action">{{ $gate.isAdmin() ? 'Chat mit Händlern' : 'Chat mit dem Systemadministrator' }}</a>
                             <a href="/profile" class="list-group-item list-group-item-action">Siehe Profil Informationen</a>
-                            <a href="/logout" class="list-group-item list-group-item-action">Anmelden</a>
+                            <a @click="logout" class="logout-link list-group-item list-group-item-action">Anmelden</a>
                         </div>
                     </div>
                 </div>
@@ -30,6 +30,13 @@
             }
         },
         methods: {
+            logout() {
+                // logout functionality is a bit tricky but it works for now
+                axios.post('/logout')
+                .then(() => {
+                    window.location.href = '/';
+                });
+            },
             getAuthenticatedUser() {
                 axios.get('/api/profile')
                 .then((response) => {
@@ -49,3 +56,9 @@
         }
     }
 </script>
+
+<style scoped>
+.logout-link {
+    cursor: pointer;
+}
+</style>
