@@ -2048,7 +2048,7 @@ __webpack_require__.r(__webpack_exports__);
       if (file.size < 2 * 1024 * 1024) {
         this.form.business_registration_form = file;
       } else {
-        swal.fire('Hata!', 'Dosya boyutu en fazla 2MB olabilir', 'error');
+        swal.fire('Fehler!', 'Dateigröße kann bis zu 2 MB sein', 'error');
       }
     },
     updateIdCard: function updateIdCard(event) {
@@ -2059,7 +2059,7 @@ __webpack_require__.r(__webpack_exports__);
       if (file.size < 2 * 1024 * 1024) {
         this.form.id_card = file;
       } else {
-        swal.fire('Hata!', 'Dosya boyutu en fazla 2MB olabilir', 'error');
+        swal.fire('Fehler!', 'Dateigröße kann bis zu 2 MB sein', 'error');
       }
     },
     registerInfo: function registerInfo() {
@@ -2071,7 +2071,7 @@ __webpack_require__.r(__webpack_exports__);
           return objectToFormData(data);
         }]
       }).then(function () {
-        swal.fire('Başarılı!', 'Bilgileriniz gönderildi. Onaylama maili verdiğiniz mail adresine gönderildi.', 'success');
+        swal.fire('Erfolgreich!', 'Ihre Informationen wurden gesendet. Eine Bestätigungs-E-Mail wurde an die angegebene E-Mail-Adresse gesendet.', 'success');
 
         _this.$Progress.finish(); // clear the errors
 
@@ -2085,7 +2085,7 @@ __webpack_require__.r(__webpack_exports__);
 
         _this.form.reset();
       })["catch"](function () {
-        swal.fire('Hata!', 'Bilgileriniz gönderilirken hata oluştu. Bilgilerinizi kontrol edip tekrar deneyin.', 'error');
+        swal.fire('Hata!', 'Beim Senden Ihrer Informationen ist ein Fehler aufgetreten. Überprüfen Sie Ihre Informationen und versuchen Sie es erneut.', 'error');
 
         _this.$Progress.fail();
       });
@@ -70786,7 +70786,7 @@ var render = function() {
       _c("div", { staticClass: "col-md-12" }, [
         _c("div", { staticClass: "card" }, [
           _c("div", { staticClass: "card-header" }, [
-            _vm._v("Handler Application Form")
+            _vm._v("Handler-Antragsformular")
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "card-body" }, [
@@ -70798,7 +70798,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "company_name" }
                   },
-                  [_vm._v("Şirket Adı")]
+                  [_vm._v("Firmenname (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -70849,7 +70849,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "name" }
                   },
-                  [_vm._v("Adınız Soyadınız")]
+                  [_vm._v("Vorname und Nachname (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -70894,7 +70894,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "email" }
                   },
-                  [_vm._v("E-Posta Adresi")]
+                  [_vm._v("E-mail (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -70939,7 +70939,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "phone" }
                   },
-                  [_vm._v("Telefon")]
+                  [_vm._v("Telefon (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -70984,7 +70984,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "business_registration_form" }
                   },
-                  [_vm._v("Gewerbe Anmeldung (Kopie)")]
+                  [_vm._v("Gewerbe Anmeldung (Kopie) (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -71024,7 +71024,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "id_card" }
                   },
-                  [_vm._v("Ausweiss (Kopie)")]
+                  [_vm._v("Ausweis (Kopie) (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -71053,7 +71053,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "tax_number" }
                   },
-                  [_vm._v("Umsatzsteuer ID")]
+                  [_vm._v("Umsatzsteuer ID (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -71100,7 +71100,7 @@ var render = function() {
                     staticClass: "col-md-4 col-form-label",
                     attrs: { for: "description" }
                   },
-                  [_vm._v("Açıklama")]
+                  [_vm._v("Anwendungsinfo (mindestens 40 Zeichen) (*)")]
                 ),
                 _vm._v(" "),
                 _c(
@@ -71198,7 +71198,7 @@ var render = function() {
                       }
                     }),
                     _vm._v(
-                      " Gönderdiğim bilgilerimin doğru olduğunu kabul ediyorum. Bilgilerimin yanlışlığından doğacak aksaklıklardan sorumlu olduğumu taahhüt ediyorum.\n                            "
+                      " Ich akzeptiere, dass die von mir gesendeten Informationen korrekt sind. Ich verpflichte mich, für alle Unannehmlichkeiten verantwortlich zu sein, die durch die Ungenauigkeit meiner Informationen verursacht werden. (*)\n                            "
                     )
                   ]
                 )
@@ -71222,7 +71222,7 @@ var render = function() {
                         }
                       }
                     },
-                    [_vm._v("Bilgileri Yükle")]
+                    [_vm._v("Informationen hochladen")]
                   )
                 ])
               ])

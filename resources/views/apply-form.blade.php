@@ -33,19 +33,30 @@
                     <ul class="navbar-nav mr-auto">
                         @auth
                             <li class="nav-item">
-                                <a class="nav-link" href="/home">Home
-                                    <span class="sr-only">(current)</span>
-                                </a>
+                                <a class="nav-link" href="/">Willkommen</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/dealers">Händlerlist</a>
+                                <router-link class="nav-link" to="/home">Home</router-link>
+                            </li>
+                            @can('isAdmin')
+                                <li class="nav-item">
+                                    <router-link class="nav-link" to="/users">Benutzerlist
+                                        <span class="sr-only">(current)</span>
+                                    </router-link>
+                                </li>
+                                <li class="nav-item">
+                                    <router-link class="nav-link" to="/dealers">Anwendungsliste</router-link>
+                                </li>
+                            @endcan
+                            <li class="nav-item">
+                                <router-link class="nav-link" to="/dealer-chat">Händlerchat</router-link>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/dealer-chat">Händlerchat</a>
+                                <router-link class="nav-link" to="/profile">Profil</router-link>
                             </li>
                         @else
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Return to Welcome</a>
+                            <a class="nav-link" href="/">Zurück zur Willkommen</a>
                         </li>
                         @endauth
                     </ul>
@@ -55,13 +66,8 @@
                         <!-- Authentication Links -->
                         @guest
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                <a class="nav-link" href="{{ route('login') }}">Benutzer Login</a>
                             </li>
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                                </li>
-                            @endif
                         @else
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
@@ -87,10 +93,11 @@
         </nav>
         <main class="py-4">
             <apply-form></apply-form>
+            <vue-progress-bar></vue-progress-bar>
         </main>
         <footer class="py-5 bg-dark">
             <div class="container">
-                <p class="m-0 text-center text-white">Copyright © Media Pons B2B Application 2020</p>
+                <p class="m-0 text-center text-white">Copyright © {{ config('app.name', 'Media Pons B2B App Demo') }} {{ date('Y') }}</p>
             </div>
             <!-- /.container -->
         </footer>

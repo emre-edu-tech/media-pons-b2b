@@ -25,7 +25,7 @@ class FrontController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:dealers,email',
             'phone' => 'required|string|max:50',
-            'description' => 'required|string',
+            'description' => 'required|string|min:40',
             'business_registration_form' => 'required|mimes:pdf,doc,docx',
             'id_card' => 'required|mimes:pdf,doc,docx',
             'tax_number' => 'required|string',

@@ -73,7 +73,7 @@
                 </div>
                 
                 <div class="title m-b-md">
-                    Media Pons B2B Application Demo
+                    Media Pons B2B Anwendungsdemo
                 </div>
 
                 @if (Route::has('login'))
@@ -81,11 +81,9 @@
                     @auth
                         <a href="{{ url('/home') }}">Home</a>
                     @else
-                        <a href="{{ route('login') }}">Login</a>
-                        <a class="nav-link" href="{{ route('front.applyform') }}">{{ __('Apply for partnership') }}</a>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Register</a>
-                        @endif
+                        <a href="https://tobacco-shop-demo2.media-pons.de/" target="_blank">2 Brothers Tobacco Shop</a>
+                        <a href="{{ route('login') }}">Benutzer Login</a>
+                        <a class="nav-link" href="{{ route('front.applyform') }}">Partnerschaft beantragen</a>
                     @endauth
                 </div>
                 @endif

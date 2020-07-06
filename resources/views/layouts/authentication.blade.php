@@ -56,7 +56,7 @@
                             </li>
                         @else
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Willkommen</a>
+                            <a class="nav-link" href="/">Zurück zur Willkommen</a>
                         </li>
                         @endauth
                     </ul>
@@ -91,25 +91,17 @@
                 </div>
             </div>
         </nav>
-
-        <main class="py-4">
-            <router-view :user="{{ Auth::user() }}"></router-view>
-            <vue-progress-bar></vue-progress-bar>
+        <main class="my-5">
+            @yield('content')
         </main>
-
         <footer class="py-5 bg-dark">
             <div class="container">
-                <p class="m-0 text-center text-white">Copyright © Media Pons B2B Application 2020</p>
+                <p class="m-0 text-center text-white">Copyright © {{ config('app.name', 'Media Pons B2B App Demo') }} {{ date('Y') }}</p>
             </div>
             <!-- /.container -->
         </footer>
     </div>
     <!-- Scripts -->
-    @auth
-        <script>
-            window.user = @json(auth()->user())
-        </script>
-    @endauth
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>
