@@ -13,7 +13,7 @@
                             <a href="/dealers" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen Händler Anwendungen</a>
                             <a href="/dealer-chat" class="list-group-item list-group-item-action">{{ $gate.isAdmin() ? 'Chat mit Händlern' : 'Chat mit dem Systemadministrator' }}</a>
                             <a href="/profile" class="list-group-item list-group-item-action">Siehe Profil Informationen</a>
-                            <a @click="logout" class="logout-link list-group-item list-group-item-action">Anmelden</a>
+                            <a @click="logout" class="logout-link list-group-item list-group-item-action">Abmelden</a>
                         </div>
                     </div>
                 </div>
@@ -44,8 +44,8 @@
                 })
                 .catch(() => {
                     swal.fire(
-                        'Hata!',
-                        'Kullanıcı bilgileri getirilirken hata oluştu. Internet bağlantınızı kontrol edin.',
+                        'Fehler!',
+                        'Fehler beim Abrufen der Benutzerinformationen. Prüfe deine Internetverbindung.',
                         'error',
                     );
                 });

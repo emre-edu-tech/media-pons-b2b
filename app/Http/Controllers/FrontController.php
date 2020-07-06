@@ -63,15 +63,15 @@ class FrontController extends Controller
             ]);
 
             // send dealer candidate an email that we got his application
-            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-form-notification-mail', 'Application received');
+            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-form-notification-mail', 'Anwendung empfangen');
 
             return response()->json([
-                'message' => 'Message successfully sent',
+                'message' => 'Nachricht erfolgreich gesendet',
                 'mail_message' => $mailStatus,
             ]);
         } else {
             return response()->json([
-                'message' => 'Server error! Try again!',
+                'message' => 'Serverfehler! Versuch es noch einmal!',
             ]);
         }
     }

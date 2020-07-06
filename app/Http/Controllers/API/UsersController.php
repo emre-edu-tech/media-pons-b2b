@@ -70,7 +70,7 @@ class UsersController extends Controller
         if(User::where('email', '=', $request->email)->count() > 0) {
             return [
                 'status' => 'mailerror',
-                'message' => 'Bu e-posta adresine sahip bir kullanıcı sistemde zaten kayıtlı',
+                'message' => 'Ein Benutzer mit dieser E-Mail-Adresse ist bereits im System registriert.',
             ];
         }
 
@@ -117,25 +117,25 @@ class UsersController extends Controller
                 'email' => $request->email,
                 'phone_number' => $request->phone,
                 'password' => $hashed_password,
-                'bio' => $request->description,
+                'company_description' => $request->description,
                 'user_role' => 'user',
             ]);
 
             // is new user is created then remove it from dealer applications
             if($newUser) {
                 // send an email with user credentials
-                $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Kullanıcı Giriş Bilgileri');
+                $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
                 return [
                     'status' => 'success',
-                    'user_message' => 'User is created',
+                    'user_message' => 'Benutzer wird erstellt',
                     'mail_message' => $mailStatus,
                 ];
             } else {
-                return ['message' => 'Yeni kullanıcı yaratılırken hata oluştu.'];
+                return ['message' => 'Fehler beim Hinzufügen eines neuen Benutzers.'];
             }
         } else {
             return response()->json([
-                'message' => 'Server error! Error while uploading files!',
+                'message' => 'Serverfehler! Fehler beim Hochladen der Dateien!',
             ]);
         }
     }
@@ -183,14 +183,14 @@ class UsersController extends Controller
                 $save_path.$user->id_card
             ]);
 
-            $mailStatus = sendNotificationEmail($user, null, 'templates.mail.user-delete-mail', 'Kaydınız silindi.');
+            $mailStatus = sendNotificationEmail($user, null, 'templates.mail.user-delete-mail', 'Ihre Registrierung wurde gelöscht.');
 
             return [
-                'message' => 'Kullanıcı silindi',
+                'message' => 'Benutzer gelöscht.',
                 'mail_message' => $mailStatus
             ];
         } else {
-            return ['message' => 'Sunucu hatası. Kullanıcı silinemedi'];
+            return ['message' => 'Serverfehler! Der Benutzer konnte nicht gelöscht werden.'];
         }
     }
 
@@ -219,7 +219,7 @@ class UsersController extends Controller
             $user->bio = $request->bio;
         }
 
-        if(!empty($request->bio)){
+        if(!empty($request->description)){
             $user->company_description = $request->description;
         }
         
@@ -266,9 +266,9 @@ class UsersController extends Controller
         }
 
         if($user->save()) {
-            return ['message' => 'Profil bilgisi güncellendi'];
+            return ['message' => 'Profilinformationen aktualisiert'];
         }else {
-            return ['message' => 'Güncelleme hatası'];
+            return ['message' => 'Aktualisierungsfehler'];
         }
     }
 }

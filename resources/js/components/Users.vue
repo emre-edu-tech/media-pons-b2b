@@ -72,7 +72,7 @@
                         <form @submit.prevent="saveNewUser()">
                             <div class="modal-body">
                                 <div class="form-group row">
-                                    <label for="company_name" class="col-md-4 col-form-label">Şirket Adı</label>
+                                    <label for="company_name" class="col-md-4 col-form-label">Firmenname</label>
 
                                     <div class="col-md-8">
                                         <input type="text" class="form-control" id="company_name" v-model="form.company_name" :class="{'is-invalid': form.errors.has('company_name')}">
@@ -81,7 +81,7 @@
                                 </div>
 
                                 <div class="form-group row">
-                                    <label for="name" class="col-md-4 col-form-label">Adınız Soyadınız</label>
+                                    <label for="name" class="col-md-4 col-form-label">Vorname und Nachname</label>
 
                                     <div class="col-md-8">
                                         <input type="text" class="form-control" id="name" v-model="form.name" :class="{'is-invalid': form.errors.has('name')}">
@@ -90,7 +90,7 @@
                                 </div>
 
                                 <div class="form-group row">
-                                    <label for="email" class="col-md-4 col-form-label">E-Posta Adresi</label>
+                                    <label for="email" class="col-md-4 col-form-label">E-mail</label>
 
                                     <div class="col-md-8">
                                         <input type="email" v-model="form.email" class="form-control" id="email" :class="{'is-invalid': form.errors.has('email')}">
@@ -116,7 +116,7 @@
                                 </div>
 
                                 <div class="form-group row">
-                                    <label for="id_card" class="col-md-4 col-form-label">Ausweiss (Kopie)</label>
+                                    <label for="id_card" class="col-md-4 col-form-label">Ausweis (Kopie)</label>
                                     <div class="col-sm-8">
                                         <input type="file" @change="updateIdCard" id="id_card" name="id_card" class="form-input" :class="{'is-invalid': form.errors.has('id_card')}">
                                         <has-error :form="form" field="id_card"></has-error>
@@ -133,7 +133,7 @@
                                 </div>
 
                                 <div class="form-group row">
-                                    <label for="description" class="col-md-4 col-form-label">Açıklama</label>
+                                    <label for="description" class="col-md-4 col-form-label">Firmen Beschreibung</label>
                                     <div class="col-md-8">
                                         <textarea rows="10" class="form-control" id="description" name="description" v-model="form.description" :class="{'is-invalid': form.errors.has('description')}"></textarea>
                                         <has-error :form="form" field="description"></has-error>
@@ -199,15 +199,15 @@
                     if(response.data.status == 'success') {
                         FireEvent.$emit('AfterDealerAccepted'),
                         swal.fire(
-                            'İşlem başarılı!',
-                            'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
+                            'Erfolgreich!',
+                            'Benutzer wurde dem System hinzugefügt. Benutzeranmeldeinformationen wurden an den Benutzer gesendet.',
                             'success',
                         );
                         this.$Progress.finish();
                     } else if(response.data.status == 'mailerror') {
                         swal.fire(
-                            'Mail hatası!',
-                            `Kullanıcı eklendi fakat ${response.data.message}`,
+                            'Mail-Fehler!',
+                            `Der Benutzer wurde dem System hinzugefügt, aber ${response.data.message}`,
                             'warning',
                         );
                         this.$Progress.finish();
@@ -216,7 +216,7 @@
                 .catch(() => {
                     toast.fire({
                         icon: 'error',
-                        title: 'Kullanıcı eklenirken hata oluştu. Lütfen tekrar deneyiniz.',
+                        title: 'Fehler beim Hinzufügen des Benutzers. Bitte versuche es erneut.',
                     });
                     this.$Progress.fail();
                 });
@@ -234,8 +234,8 @@
                     this.form.business_registration_form = file;
                 } else {
                     swal.fire(
-                        'Hata!',
-                        'Dosya boyutu en fazla 2MB olabilir',
+                        'Fehler!',
+                        'Die Dateigröße kann bis zu 2 MB betragen',
                         'error',
                     );
                 }
@@ -254,8 +254,8 @@
                 this.form.id_card = file;
                 } else {
                     swal.fire(
-                        'Hata!',
-                        'Dosya boyutu en fazla 2MB olabilir',
+                        'Fehler!',
+                        'Die Dateigröße kann bis zu 2 MB betragen',
                         'error',
                     );
                 }
@@ -264,40 +264,44 @@
 
             deleteUser(id) {
                 swal.fire({
-                    title: 'Emin misiniz?',
-                    text: 'Silme işlemi geri alınamaz',
+                    title: 'Sind Sie sicher?',
+                    text: 'Löschen kann nicht rückgängig gemacht werden!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Evet, sil',
-                    cancelButtonText: 'İptal',
+                    confirmButtonText: 'Ja löschen',
+                    cancelButtonText: 'Abbrechen',
                 }).then((result) => {
                     if(result.value) {
+                        this.$Progress.start();
                         // Send ajax request to delete it
                         this.form.delete(`/api/users/${id}`)
                         .then(() => {
                             // Broadcast the event     
                             FireEvent.$emit('AfterUserDeleted');
                             swal.fire(
-                                'Silindi!',
-                                'Sistem kullanıcısı başarıyla silindi',
+                                'Gelöscht!',
+                                'Systembenutzer erfolgreich gelöscht',
                                 'success',
                             );
+                            this.$Progress.finish();
                             
                         }).catch(() => {
                             swal.fire(
-                                'Silme başarısız!',
-                                'Sunucuda hata oluştu',
+                                'Fehler!',
+                                'Fehler auf dem Server!',
                                 'error',
                             );
+                            this.$Progress.fail();
                         });
                     } else if (result.dismiss === swal.DismissReason.cancel) {
                         swal.fire(
-                            'Başvuru silinemedi!',
-                            'Başvuru silme işlemi kullanıcı tarafından iptal edildi',
+                            'Der Benutzer konnte nicht gelöscht werden!',
+                            'Das Löschen des Benutzers wurde abgebrochen.',
                             'warning',
                         );
+                        this.$Progress.fail();
                     }
                 })
             },
@@ -308,8 +312,8 @@
                         this.users = response.data;
                     }).catch((response) => {
                         swal.fire(
-                            'İşlem başarısız!',
-                            'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz',
+                            'Fehler!',
+                            'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.',
                             'error',
                         );
                     });

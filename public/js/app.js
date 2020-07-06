@@ -2419,16 +2419,16 @@ __webpack_require__.r(__webpack_exports__);
         description: dealer.description
       }).then(function (response) {
         if (response.data.status == 'success') {
-          FireEvent.$emit('AfterDealerAccepted'), swal.fire('İşlem başarılı!', 'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.', 'success');
+          FireEvent.$emit('AfterDealerAccepted'), swal.fire('Erfolgreich!', 'Der Antrag wurde angenommen. Benutzer wurde dem System hinzugefügt. Benutzerinformationen an den Benutzer gesendet.', 'success');
 
           _this.$Progress.finish();
         } else if (response.data.status == 'mailerror') {
-          swal.fire('Kullanıcı kayıtlı!', "".concat(response.data.message), 'error');
+          swal.fire('Der Benutzer ist bereits registriert!', "".concat(response.data.message), 'error');
 
           _this.$Progress.finish();
         }
       })["catch"](function () {
-        swal.fire('İşlem başarısız!', response.data.message, 'error');
+        swal.fire('Fehler!', response.data.message, 'error');
       });
     },
     rejectDealer: function rejectDealer(id) {
@@ -2436,30 +2436,30 @@ __webpack_require__.r(__webpack_exports__);
 
       this.$Progress.start();
       swal.fire({
-        title: 'Emin misiniz?',
-        text: 'Silme işlemi geri alınamaz',
+        title: 'Bist du sicher?',
+        text: 'Löschen kann nicht rückgängig gemacht werden!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Evet, sil',
-        cancelButtonText: 'İptal'
+        confirmButtonText: 'Ja löschen',
+        cancelButtonText: 'Abbrechen'
       }).then(function (result) {
         if (result.value) {
           // Send ajax request to delete it
           _this2.form["delete"]("/api/dealers/".concat(id)).then(function (response) {
             // Broadcast the event     
             FireEvent.$emit('AfterDealerDeleted');
-            swal.fire('Silindi!', 'Başvuru silindi. Bilgisi kullanıcıya gönderildi', 'success');
+            swal.fire('Gelöscht!', 'Antrag abgelehnt. Die Informationen wurden an den Benutzer gesendet.', 'success');
 
             _this2.$Progress.finish();
           })["catch"](function () {
-            swal.fire('Silme başarısız!', 'Sunucuda hata oluştu', 'error');
+            swal.fire('Fehler!', 'Serverfehler!', 'error');
 
             _this2.$Progress.fail();
           });
         } else if (result.dismiss === swal.DismissReason.cancel) {
-          swal.fire('Başvuru silinemedi!', 'Başvuru silme işlemi kullanıcı tarafından iptal edildi', 'warning');
+          swal.fire('Der Benutzer konnte nicht gelöscht werden!', 'Das Löschen des Benutzers wurde abgebrochen.', 'warning');
 
           _this2.$Progress.fail();
         }
@@ -2474,7 +2474,7 @@ __webpack_require__.r(__webpack_exports__);
         axios.get("/api/dealers?page=".concat(page)).then(function (response) {
           _this3.dealers = response.data;
         })["catch"](function (response) {
-          swal.fire('İşlem başarısız!', 'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz', 'error');
+          swal.fire('Fehler!', 'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.', 'error');
         });
       }
     }
@@ -2541,7 +2541,7 @@ __webpack_require__.r(__webpack_exports__);
       axios.get('/api/profile').then(function (response) {
         _this.user = response.data;
       })["catch"](function () {
-        swal.fire('Hata!', 'Kullanıcı bilgileri getirilirken hata oluştu. Internet bağlantınızı kontrol edin.', 'error');
+        swal.fire('Fehler!', 'Fehler beim Abrufen der Benutzerinformationen. Prüfe deine Internetverbindung.', 'error');
       });
     }
   },
@@ -2806,7 +2806,7 @@ __webpack_require__.r(__webpack_exports__);
 
         reader.readAsDataURL(file);
       } else {
-        swal.fire('Hata!', 'Dosya boyutu en fazla 2MB olabilir', 'error');
+        swal.fire('Fehler!', 'Dateigröße kann bis zu 2 MB sein!', 'error');
       }
     },
     updateInfo: function updateInfo() {
@@ -2820,7 +2820,7 @@ __webpack_require__.r(__webpack_exports__);
 
         toast.fire({
           icon: 'success',
-          title: 'Kullanıcı bilgileri başarıyla güncellendi!'
+          title: 'Benutzerinformationen wurden erfolgreich aktualisiert!'
         });
         _this2.form.photo = ''; // Update successful
 
@@ -2833,7 +2833,7 @@ __webpack_require__.r(__webpack_exports__);
       })["catch"](function () {
         toast.fire({
           icon: 'error',
-          title: 'Kullanıcı bilgileri güncellenirken hata oluştu!'
+          title: 'Fehler beim Aktualisieren der Benutzerinformationen!'
         });
 
         _this2.$Progress.fail();
@@ -3068,18 +3068,18 @@ __webpack_require__.r(__webpack_exports__);
         $('#userModal').modal('hide');
 
         if (response.data.status == 'success') {
-          FireEvent.$emit('AfterDealerAccepted'), swal.fire('İşlem başarılı!', 'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.', 'success');
+          FireEvent.$emit('AfterDealerAccepted'), swal.fire('Erfolgreich!', 'Benutzer wurde dem System hinzugefügt. Benutzeranmeldeinformationen wurden an den Benutzer gesendet.', 'success');
 
           _this.$Progress.finish();
         } else if (response.data.status == 'mailerror') {
-          swal.fire('Mail hatası!', "Kullan\u0131c\u0131 eklendi fakat ".concat(response.data.message), 'warning');
+          swal.fire('Mail-Fehler!', "Der Benutzer wurde dem System hinzugef\xFCgt, aber ".concat(response.data.message), 'warning');
 
           _this.$Progress.finish();
         }
       })["catch"](function () {
         toast.fire({
           icon: 'error',
-          title: 'Kullanıcı eklenirken hata oluştu. Lütfen tekrar deneyiniz.'
+          title: 'Fehler beim Hinzufügen des Benutzers. Bitte versuche es erneut.'
         });
 
         _this.$Progress.fail();
@@ -3097,7 +3097,7 @@ __webpack_require__.r(__webpack_exports__);
         // reader.readAsDataURL(file);
         this.form.business_registration_form = file;
       } else {
-        swal.fire('Hata!', 'Dosya boyutu en fazla 2MB olabilir', 'error');
+        swal.fire('Fehler!', 'Die Dateigröße kann bis zu 2 MB betragen', 'error');
       }
     },
     updateIdCard: function updateIdCard(event) {
@@ -3112,33 +3112,41 @@ __webpack_require__.r(__webpack_exports__);
         // reader.readAsDataURL(file);
         this.form.id_card = file;
       } else {
-        swal.fire('Hata!', 'Dosya boyutu en fazla 2MB olabilir', 'error');
+        swal.fire('Fehler!', 'Die Dateigröße kann bis zu 2 MB betragen', 'error');
       }
     },
     deleteUser: function deleteUser(id) {
       var _this2 = this;
 
       swal.fire({
-        title: 'Emin misiniz?',
-        text: 'Silme işlemi geri alınamaz',
+        title: 'Sind Sie sicher?',
+        text: 'Löschen kann nicht rückgängig gemacht werden!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Evet, sil',
-        cancelButtonText: 'İptal'
+        confirmButtonText: 'Ja löschen',
+        cancelButtonText: 'Abbrechen'
       }).then(function (result) {
         if (result.value) {
-          // Send ajax request to delete it
+          _this2.$Progress.start(); // Send ajax request to delete it
+
+
           _this2.form["delete"]("/api/users/".concat(id)).then(function () {
             // Broadcast the event     
             FireEvent.$emit('AfterUserDeleted');
-            swal.fire('Silindi!', 'Sistem kullanıcısı başarıyla silindi', 'success');
+            swal.fire('Gelöscht!', 'Systembenutzer erfolgreich gelöscht', 'success');
+
+            _this2.$Progress.finish();
           })["catch"](function () {
-            swal.fire('Silme başarısız!', 'Sunucuda hata oluştu', 'error');
+            swal.fire('Fehler!', 'Fehler auf dem Server!', 'error');
+
+            _this2.$Progress.fail();
           });
         } else if (result.dismiss === swal.DismissReason.cancel) {
-          swal.fire('Başvuru silinemedi!', 'Başvuru silme işlemi kullanıcı tarafından iptal edildi', 'warning');
+          swal.fire('Der Benutzer konnte nicht gelöscht werden!', 'Das Löschen des Benutzers wurde abgebrochen.', 'warning');
+
+          _this2.$Progress.fail();
         }
       });
     },
@@ -3151,7 +3159,7 @@ __webpack_require__.r(__webpack_exports__);
         axios.get("/api/get-users?page=".concat(page)).then(function (response) {
           _this3.users = response.data;
         })["catch"](function (response) {
-          swal.fire('İşlem başarısız!', 'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz', 'error');
+          swal.fire('Fehler!', 'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.', 'error');
         });
       }
     }
@@ -71260,7 +71268,7 @@ var render = function() {
       _c("div", { staticClass: "col-sm-12" }, [
         _c("div", { staticClass: "card" }, [
           _c("div", { staticClass: "card-header" }, [
-            _vm._v("Media Pons Chat")
+            _vm._v("2 Brothers Tobacco Händler Chat")
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "card-body chat-card-body" }, [
@@ -71385,7 +71393,11 @@ var render = function() {
     { staticClass: "conversation" },
     [
       _c("h1", [
-        _vm._v(_vm._s(_vm.contact ? _vm.contact.name : "Select a Contact"))
+        _vm._v(
+          _vm._s(
+            _vm.contact ? _vm.contact.name : "Wählen Sie einen Händler aus"
+          )
+        )
       ]),
       _vm._v(" "),
       _c("MessagesFeed", {
@@ -71553,13 +71565,13 @@ var render = function() {
                             _c(
                               "span",
                               { attrs: { slot: "prev-nav" }, slot: "prev-nav" },
-                              [_vm._v("< Önceki")]
+                              [_vm._v("< Vorherige")]
                             ),
                             _vm._v(" "),
                             _c(
                               "span",
                               { attrs: { slot: "next-nav" }, slot: "next-nav" },
-                              [_vm._v("Sonraki >")]
+                              [_vm._v("Nächste >")]
                             )
                           ]
                         )
@@ -71594,9 +71606,7 @@ var staticRenderFns = [
         _c("div", { staticClass: "card-tools" }, [
           _c("span", { staticClass: "mr-2" }, [
             _c("strong", [
-              _vm._v(
-                "Düzenleme ve silme işlemini ancak admin kullanıcısı yapabilir"
-              )
+              _vm._v("Nur Administratoren können bearbeiten und löschen.")
             ])
           ])
         ])
@@ -71731,7 +71741,7 @@ var render = function() {
                     "logout-link list-group-item list-group-item-action",
                   on: { click: _vm.logout }
                 },
-                [_vm._v("Anmelden")]
+                [_vm._v("Abmelden")]
               )
             ])
           ])
@@ -71772,7 +71782,7 @@ var render = function() {
           expression: "message"
         }
       ],
-      attrs: { placeholder: "Enter your message..." },
+      attrs: { placeholder: "Geben Sie Ihre Nachricht..." },
       domProps: { value: _vm.message },
       on: {
         keydown: function($event) {
@@ -71871,7 +71881,7 @@ var render = function() {
     _c("div", { staticClass: "row justify-content-center" }, [
       _c("div", { staticClass: "col-md-10" }, [
         _c("h3", { staticClass: "text-center mt-4 mb-4" }, [
-          _vm._v("Üzgünüz aradığınız sayfaya ulaşılamadı.")
+          _vm._v("Sorry, Seite nicht gefunden!")
         ]),
         _vm._v(" "),
         _c(
@@ -73305,7 +73315,7 @@ var render = function() {
                                   staticClass: "col-md-4 col-form-label",
                                   attrs: { for: "company_name" }
                                 },
-                                [_vm._v("Şirket Adı")]
+                                [_vm._v("Firmenname")]
                               ),
                               _vm._v(" "),
                               _c(
@@ -73361,7 +73371,7 @@ var render = function() {
                                   staticClass: "col-md-4 col-form-label",
                                   attrs: { for: "name" }
                                 },
-                                [_vm._v("Adınız Soyadınız")]
+                                [_vm._v("Vorname und Nachname")]
                               ),
                               _vm._v(" "),
                               _c(
@@ -73412,7 +73422,7 @@ var render = function() {
                                   staticClass: "col-md-4 col-form-label",
                                   attrs: { for: "email" }
                                 },
-                                [_vm._v("E-Posta Adresi")]
+                                [_vm._v("E-mail")]
                               ),
                               _vm._v(" "),
                               _c(
@@ -73554,7 +73564,7 @@ var render = function() {
                                   staticClass: "col-md-4 col-form-label",
                                   attrs: { for: "id_card" }
                                 },
-                                [_vm._v("Ausweiss (Kopie)")]
+                                [_vm._v("Ausweis (Kopie)")]
                               ),
                               _vm._v(" "),
                               _c(
@@ -73647,7 +73657,7 @@ var render = function() {
                                   staticClass: "col-md-4 col-form-label",
                                   attrs: { for: "description" }
                                 },
-                                [_vm._v("Açıklama")]
+                                [_vm._v("Firmen Beschreibung")]
                               ),
                               _vm._v(" "),
                               _c(

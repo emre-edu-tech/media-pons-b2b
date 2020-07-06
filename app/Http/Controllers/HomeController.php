@@ -25,12 +25,4 @@ class HomeController extends Controller
     {
         return view('home');
     }
-
-    public function products() {
-        return view('pages.frontend.shop');
-    }
-
-    public function product() {
-        return view('pages.frontend.single-product');
-    }
 }

@@ -3,7 +3,7 @@
     <div class="row justify-content-center">
         <div class="col-sm-12">
             <div class="card">
-                <div class="card-header">Media Pons Chat</div>
+                <div class="card-header">2 Brothers Tobacco Händler Chat</div>
                 <div class="card-body chat-card-body">
                     <div class="chat-app">
                         <Conversation :contact="selectedContact" :messages="messages" @newMessage="saveNewMessage" />

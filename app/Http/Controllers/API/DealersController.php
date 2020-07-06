@@ -81,14 +81,14 @@ class DealersController extends Controller
                 $save_path.$dealer->id_card
             ]);
 
-            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-reject-mail', 'Başvurunuz reddedildi');
+            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-reject-mail', 'Ihre Bewerbung wurde abgelehnt!');
 
             return [
-                'message' => 'Başvuru silindi',
+                'message' => 'Anwendung gelöscht',
                 'mail_message' => $mailStatus,
             ];
         } else {
-            return ['message' => 'Sunucu hatası. Başvuru silinemedi'];
+            return ['message' => 'Serverfehler! Die Anwendung konnte nicht gelöscht werden.'];
         }
     }
 
@@ -106,7 +106,7 @@ class DealersController extends Controller
         if(User::where('email', '=', $request->email)->count() > 0) {
             return [
                 'status' => 'mailerror',
-                'message' => 'Bu e-posta adresine sahip bir kullanıcı sistemde zaten kayıtlı',
+                'message' => 'Ein Benutzer mit dieser E-Mail-Adresse ist bereits im System registriert!',
             ];
         }
         // this function gets dealer information and adds it as a user
@@ -129,16 +129,16 @@ class DealersController extends Controller
         // is new user is created then remove it from dealer applications
         if($newUser) {
             // send an email with user credentials
-            $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Kullanıcı Giriş Bilgileri');
+            $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
             $this->removeDealerEntry($request->id);
             return [
                 'status' => 'success',
-                'user_message' => 'User is created',
-                'dealer_message' => 'Application is deleted',
+                'user_message' => 'Benutzer wird erstellt!',
+                'dealer_message' => 'Bewerbung wird gelöscht!',
                 'mail_message' => $mailStatus,
             ];
         } else {
-            return ['message' => 'Yeni kullanıcı yaratılırken hata oluştu.'];
+            return ['message' => 'Fehler beim Erstellen eines neuen Benutzers!'];
         }
     }
 }

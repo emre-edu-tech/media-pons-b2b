@@ -7,7 +7,7 @@
                         <h3 class="card-title">Händleranwendungen</h3>
 
                         <div class="card-tools">
-                            <span class="mr-2"><strong>Düzenleme ve silme işlemini ancak admin kullanıcısı yapabilir</strong></span>
+                            <span class="mr-2"><strong>Nur Administratoren können bearbeiten und löschen.</strong></span>
                         </div>
                     </div>
                     <!-- /.card-header -->
@@ -51,8 +51,8 @@
                     <!-- /.card-body -->
                     <div class="card-footer" v-if="dealers.last_page > 1">
                         <pagination :data="dealers" @pagination-change-page="getAllDealers">
-                            <span slot="prev-nav">&lt; Önceki</span>
-                            <span slot="next-nav">Sonraki &gt;</span>
+                            <span slot="prev-nav">&lt; Vorherige</span>
+                            <span slot="next-nav">Nächste &gt;</span>
                         </pagination>
                     </div><!-- /.card-footer -->
                 </div>
@@ -87,14 +87,14 @@
                     if(response.data.status == 'success') {
                         FireEvent.$emit('AfterDealerAccepted'),
                         swal.fire(
-                            'İşlem başarılı!',
-                            'Başvuru kabul edildi. Kullanıcı sisteme eklendi. Kullanıcı bilgileri kullanıcıya gönderildi.',
+                            'Erfolgreich!',
+                            'Der Antrag wurde angenommen. Benutzer wurde dem System hinzugefügt. Benutzerinformationen an den Benutzer gesendet.',
                             'success',
                         );
                         this.$Progress.finish();
                     } else if(response.data.status == 'mailerror') {
                         swal.fire(
-                            'Kullanıcı kayıtlı!',
+                            'Der Benutzer ist bereits registriert!',
                             `${response.data.message}`,
                             'error',
                         );
@@ -102,7 +102,7 @@
                     }
                 }).catch(() => {
                     swal.fire(
-                        'İşlem başarısız!',
+                        'Fehler!',
                         response.data.message,
                         'error',
                     );
@@ -111,14 +111,14 @@
             rejectDealer(id) {
                 this.$Progress.start();
                 swal.fire({
-                    title: 'Emin misiniz?',
-                    text: 'Silme işlemi geri alınamaz',
+                    title: 'Bist du sicher?',
+                    text: 'Löschen kann nicht rückgängig gemacht werden!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Evet, sil',
-                    cancelButtonText: 'İptal',
+                    confirmButtonText: 'Ja löschen',
+                    cancelButtonText: 'Abbrechen',
                 }).then((result) => {
                     if(result.value) {
                         // Send ajax request to delete it
@@ -127,23 +127,23 @@
                             // Broadcast the event     
                             FireEvent.$emit('AfterDealerDeleted');
                             swal.fire(
-                                'Silindi!',
-                                'Başvuru silindi. Bilgisi kullanıcıya gönderildi',
+                                'Gelöscht!',
+                                'Antrag abgelehnt. Die Informationen wurden an den Benutzer gesendet.',
                                 'success',
                             );
                         this.$Progress.finish();
                         }).catch(() => {
                             swal.fire(
-                                'Silme başarısız!',
-                                'Sunucuda hata oluştu',
+                                'Fehler!',
+                                'Serverfehler!',
                                 'error',
                             );
                             this.$Progress.fail();
                         });
                     } else if (result.dismiss === swal.DismissReason.cancel) {
                         swal.fire(
-                            'Başvuru silinemedi!',
-                            'Başvuru silme işlemi kullanıcı tarafından iptal edildi',
+                            'Der Benutzer konnte nicht gelöscht werden!',
+                            'Das Löschen des Benutzers wurde abgebrochen.',
                             'warning',
                         );
                         this.$Progress.fail();
@@ -157,8 +157,8 @@
                         this.dealers = response.data;
                     }).catch((response) => {
                         swal.fire(
-                            'İşlem başarısız!',
-                            'Sunucu hatası ya da bu işlemi yapmanız için yetkili değilsiniz',
+                            'Fehler!',
+                            'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.',
                             'error',
                         );
                     });

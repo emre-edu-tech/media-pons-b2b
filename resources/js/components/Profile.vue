@@ -128,8 +128,8 @@
                     reader.readAsDataURL(file);
                 } else {
                     swal.fire(
-                        'Hata!',
-                        'Dosya boyutu en fazla 2MB olabilir',
+                        'Fehler!',
+                        'Dateigröße kann bis zu 2 MB sein!',
                         'error',
                     );
                 }
@@ -144,7 +144,7 @@
                     // empty form photo data to prevent update photo on every update post
                     toast.fire({
                         icon: 'success',
-                        title: 'Kullanıcı bilgileri başarıyla güncellendi!',
+                        title: 'Benutzerinformationen wurden erfolgreich aktualisiert!',
                     });
                     this.form.photo = '';
                     // Update successful
@@ -157,7 +157,7 @@
                 .catch(() => {
                     toast.fire({
                         icon: 'error',
-                        title: 'Kullanıcı bilgileri güncellenirken hata oluştu!',
+                        title: 'Fehler beim Aktualisieren der Benutzerinformationen!',
                     });
                     this.$Progress.fail();
                 });
