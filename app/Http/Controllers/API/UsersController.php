@@ -274,12 +274,14 @@ class UsersController extends Controller
 
     public function sendNewUserPassword($id) {
 
+        $this->authorize('isAdmin');
+
         $user = User::findOrFail($id);
         // Generate new password and send to the user if the new password stored successfully
         $password = Str::random(8);
         $hashed_password = Hash::make($password);
         $user->password = $hashed_password;
-        
+
         if($user->save()) {
             $mailStatus = sendNotificationEmail($user, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
             return [
