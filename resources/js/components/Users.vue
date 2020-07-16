@@ -43,7 +43,8 @@
                                     <td>{{ user.created_at | customDate }}</td>
                                     <td>
                                         <div>
-                                            <a href="#" @click="deleteUser(user.id)" title="Benutzer löschen"><i class="fa fa-trash text-red"></i></a>
+                                            <a href="#" @click="deleteUser(user.id)" title="Benutzer löschen" class="mr-2"><i class="fa fa-trash text-red"></i></a>
+                                            <a href="#" @click="sendNewPassword(user.id)" title="Neues Passwort senden"><i class="fas fa-key text-blue"></i></a>
                                         </div>
                                     </td>
                                 </tr>
@@ -173,6 +174,46 @@
         },
 
         methods: {
+            sendNewPassword(id) {
+                swal.fire({
+                    title: 'Sind Sie sicher?',
+                    text: 'Das Benutzerkennwort wird geändert und an den Benutzer gesendet!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ja mach das',
+                    cancelButtonText: 'Abbrechen',
+                }).then((result) => {
+                    if(result.value) {
+                        this.$Progress.start();
+                        axios.put(`/api/send-new-password/${id}`)
+                        .then((response) => {
+                            swal.fire(
+                                'Erfolg!',
+                                'Das neue Passwort wurde an den Benutzer gesendet',
+                                'success',
+                            );
+                            this.$Progress.finish();
+                        }).catch((error) => {
+                            swal.fire(
+                                'Fehler!',
+                                'Fehler auf dem Server!',
+                                'error',
+                            );
+                            this.$Progress.fail();
+                        });
+                    } else if (result.dismiss === swal.DismissReason.cancel) {
+                        swal.fire(
+                            'Fehler!',
+                            'Vom Benutzer abgebrochen.',
+                            'warning',
+                        );
+                        this.$Progress.fail();
+                    }
+                });
+            },
+
             newUserModal() {
                 // clear the errors
                 this.form.clear();
@@ -303,7 +344,7 @@
                         );
                         this.$Progress.fail();
                     }
-                })
+                });
             },
             getAllUsers(page = 1) {
                 if(this.$gate.isAdmin()){

@@ -19,15 +19,16 @@ Route::apiResources([
     'dealers' => 'API\DealersController',
 ]);
 
-// MessagesController
+// MessagesController Custom Routes
 Route::get('/conversation/{id}', 'API\MessagesController@getMessagesFor')->name('conversation.allmessages');
 Route::get('/messages', 'API\MessagesController@index')->name('messages.index');
 Route::post('/messages', 'API\MessagesController@store')->name('messages.store');
 
-// DealersController
+// DealersController Custom Routes
 Route::post('/accept-dealer', 'API\DealersController@acceptDealer')->name('dealers.accept');
 
-// Users Controller
+// Users Controller Custom Routes
 Route::get('/profile', 'API\UsersController@profile')->name('users.profile');
 Route::put('/profile', 'API\UsersController@updateProfile')->name('users.profile.update');
 Route::get('/get-users','API\UsersController@getAllUsers')->name('users.all');
+Route::put('/send-new-password/{id}', 'API\UsersController@sendNewUserPassword')->name('users.newpassword');

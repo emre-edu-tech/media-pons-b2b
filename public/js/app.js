@@ -3026,6 +3026,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -3043,6 +3044,38 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
+    sendNewPassword: function sendNewPassword(id) {
+      var _this = this;
+
+      swal.fire({
+        title: 'Sind Sie sicher?',
+        text: 'Das Benutzerkennwort wird geändert und an den Benutzer gesendet!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ja mach das',
+        cancelButtonText: 'Abbrechen'
+      }).then(function (result) {
+        if (result.value) {
+          _this.$Progress.start();
+
+          axios.put("/api/send-new-password/".concat(id)).then(function (response) {
+            swal.fire('Erfolg!', 'Das neue Passwort wurde an den Benutzer gesendet', 'success');
+
+            _this.$Progress.finish();
+          })["catch"](function (error) {
+            swal.fire('Fehler!', 'Fehler auf dem Server!', 'error');
+
+            _this.$Progress.fail();
+          });
+        } else if (result.dismiss === swal.DismissReason.cancel) {
+          swal.fire('Fehler!', 'Vom Benutzer abgebrochen.', 'warning');
+
+          _this.$Progress.fail();
+        }
+      });
+    },
     newUserModal: function newUserModal() {
       // clear the errors
       this.form.clear(); // reset the modal form including file inputs
@@ -3054,7 +3087,7 @@ __webpack_require__.r(__webpack_exports__);
       $('#userModal').modal('show');
     },
     saveNewUser: function saveNewUser() {
-      var _this = this;
+      var _this2 = this;
 
       this.$Progress.start();
       this.form.submit('post', '/api/users', {
@@ -3070,11 +3103,11 @@ __webpack_require__.r(__webpack_exports__);
         if (response.data.status == 'success') {
           FireEvent.$emit('AfterDealerAccepted'), swal.fire('Erfolgreich!', 'Benutzer wurde dem System hinzugefügt. Benutzeranmeldeinformationen wurden an den Benutzer gesendet.', 'success');
 
-          _this.$Progress.finish();
+          _this2.$Progress.finish();
         } else if (response.data.status == 'mailerror') {
           swal.fire('Mail-Fehler!', "Der Benutzer wurde dem System hinzugef\xFCgt, aber ".concat(response.data.message), 'warning');
 
-          _this.$Progress.finish();
+          _this2.$Progress.finish();
         }
       })["catch"](function () {
         toast.fire({
@@ -3082,7 +3115,7 @@ __webpack_require__.r(__webpack_exports__);
           title: 'Fehler beim Hinzufügen des Benutzers. Bitte versuche es erneut.'
         });
 
-        _this.$Progress.fail();
+        _this2.$Progress.fail();
       });
     },
     updateRegForm: function updateRegForm(event) {
@@ -3116,7 +3149,7 @@ __webpack_require__.r(__webpack_exports__);
       }
     },
     deleteUser: function deleteUser(id) {
-      var _this2 = this;
+      var _this3 = this;
 
       swal.fire({
         title: 'Sind Sie sicher?',
@@ -3129,35 +3162,35 @@ __webpack_require__.r(__webpack_exports__);
         cancelButtonText: 'Abbrechen'
       }).then(function (result) {
         if (result.value) {
-          _this2.$Progress.start(); // Send ajax request to delete it
+          _this3.$Progress.start(); // Send ajax request to delete it
 
 
-          _this2.form["delete"]("/api/users/".concat(id)).then(function () {
+          _this3.form["delete"]("/api/users/".concat(id)).then(function () {
             // Broadcast the event     
             FireEvent.$emit('AfterUserDeleted');
             swal.fire('Gelöscht!', 'Systembenutzer erfolgreich gelöscht', 'success');
 
-            _this2.$Progress.finish();
+            _this3.$Progress.finish();
           })["catch"](function () {
             swal.fire('Fehler!', 'Fehler auf dem Server!', 'error');
 
-            _this2.$Progress.fail();
+            _this3.$Progress.fail();
           });
         } else if (result.dismiss === swal.DismissReason.cancel) {
           swal.fire('Der Benutzer konnte nicht gelöscht werden!', 'Das Löschen des Benutzers wurde abgebrochen.', 'warning');
 
-          _this2.$Progress.fail();
+          _this3.$Progress.fail();
         }
       });
     },
     getAllUsers: function getAllUsers() {
-      var _this3 = this;
+      var _this4 = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
       if (this.$gate.isAdmin()) {
         axios.get("/api/get-users?page=".concat(page)).then(function (response) {
-          _this3.users = response.data;
+          _this4.users = response.data;
         })["catch"](function (response) {
           swal.fire('Fehler!', 'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.', 'error');
         });
@@ -73216,6 +73249,7 @@ var render = function() {
                               _c(
                                 "a",
                                 {
+                                  staticClass: "mr-2",
                                   attrs: {
                                     href: "#",
                                     title: "Benutzer löschen"
@@ -73229,6 +73263,26 @@ var render = function() {
                                 [
                                   _c("i", {
                                     staticClass: "fa fa-trash text-red"
+                                  })
+                                ]
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "a",
+                                {
+                                  attrs: {
+                                    href: "#",
+                                    title: "Neues Passwort senden"
+                                  },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.sendNewPassword(user.id)
+                                    }
+                                  }
+                                },
+                                [
+                                  _c("i", {
+                                    staticClass: "fas fa-key text-blue"
                                   })
                                 ]
                               )

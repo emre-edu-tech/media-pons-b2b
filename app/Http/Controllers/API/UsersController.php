@@ -271,4 +271,24 @@ class UsersController extends Controller
             return ['message' => 'Aktualisierungsfehler'];
         }
     }
+
+    public function sendNewUserPassword($id) {
+
+        $user = User::findOrFail($id);
+        // Generate new password and send to the user if the new password stored successfully
+        $password = Str::random(8);
+        $hashed_password = Hash::make($password);
+        $user->password = $hashed_password;
+        
+        if($user->save()) {
+            $mailStatus = sendNotificationEmail($user, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
+            return [
+                'status' => 'success',
+                'user_message' => 'Neue Anmeldeinformationen gesendet',
+                'mail_message' => $mailStatus,
+            ];
+        } else {
+            return ['message' => 'Serverfehler! Neues Passwort konnte nicht erstellt werden.'];
+        }
+    }
 }
