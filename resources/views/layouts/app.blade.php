@@ -15,6 +15,10 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
+    <script src="{{ asset('js/app.js') }}" defer></script>
+    
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <div id="app">
@@ -48,6 +52,12 @@
                                     <router-link class="nav-link" to="/dealers">Anwendungsliste</router-link>
                                 </li>
                             @endcan
+                            <li class="nav-item">
+                                <router-link class="nav-link" to="/products">Produkte</router-link>
+                            </li>
+                            <li class="nav-item">
+                                <router-link class="nav-link" to="/cart">Warenkorb</router-link>
+                            </li>
                             <li class="nav-item">
                                 <router-link class="nav-link" to="/dealer-chat">Händlerchat</router-link>
                             </li>
@@ -110,6 +120,5 @@
             window.user = @json(auth()->user())
         </script>
     @endauth
-    <script src="{{ asset('js/app.js') }}"></script>
 </body>
 </html>

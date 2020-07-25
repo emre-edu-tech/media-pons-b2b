@@ -65,6 +65,30 @@ let routes = [
         component: require('./components/Dealers.vue').default
     },
     {
+        path: '/products',
+        component: require('./components/Products.vue').default
+    },
+    {
+        path: '/products/:id',
+        component: require('./components/SingleProduct.vue').default
+    },
+    {
+        path: '/cart',
+        component: require('./components/Cart.vue').default
+    },
+    {
+        path: '/checkout',
+        component: require('./components/Checkout.vue').default
+    },
+    {
+        path: '/cart',
+        component: require('./components/Cart.vue').default
+    },
+    {
+        path: '/thank-you',
+        component: require('./components/ThankYou.vue').default
+    },
+    {
         path: '/users',
         component: require('./components/Users.vue').default
     },
@@ -108,6 +132,15 @@ Vue.filter('titleCase', function(text) {
 Vue.filter('customDate', function(dateTime) {
     return moment(dateTime).format('D MMM YYYY, H:mm:ss');
 });
+
+Vue.filter('truncatedText', function(text) {
+    
+    if (text.length > 70) {
+        return text.substring(0, 70) + '...';
+    }
+    return text;
+
+})
 // ##############################
 
 // # For Global Frontend Authentication
@@ -130,7 +163,6 @@ Vue.prototype.$gate = new Gate(window.user);
 // Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 Vue.component('apply-form', require('./components/ApplyForm.vue').default);
 Vue.component('not-found', require('./components/NotFound.vue').default);
-
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

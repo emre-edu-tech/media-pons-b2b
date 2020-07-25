@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Gloudemans\Shoppingcart\Facades\Cart;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::apiResources([
     'users' => 'API\UsersController',
     'dealers' => 'API\DealersController',
+    'products'  => 'API\ProductsController',
+    'cities'    => 'API\CitiesController'
 ]);
 
 // MessagesController Custom Routes

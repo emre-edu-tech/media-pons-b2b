@@ -12,6 +12,7 @@
                             <a href="/users" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen registrierte Benutzer</a>
                             <a href="/dealers" v-if="$gate.isAdmin()" class="list-group-item list-group-item-action">Überprüfen Händler Anwendungen</a>
                             <a href="/dealer-chat" class="list-group-item list-group-item-action">{{ $gate.isAdmin() ? 'Chat mit Händlern' : 'Chat mit dem Systemadministrator' }}</a>
+                            <a href="/products" class="list-group-item list-group-item-action">Produkte</a>
                             <a href="/profile" class="list-group-item list-group-item-action">Siehe Profil Informationen</a>
                             <a @click="logout" class="logout-link list-group-item list-group-item-action">Abmelden</a>
                         </div>

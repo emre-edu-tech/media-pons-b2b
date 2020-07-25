@@ -24,3 +24,9 @@ if (! function_exists('sendNotificationEmail')) {
         }
     }
 }
+
+if(!function_exists('formatPrice')) {
+    function formatPrice($price) {
+        return number_format($price/100, 2, ',', '.');
+    }
+}
