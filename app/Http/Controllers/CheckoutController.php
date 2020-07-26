@@ -44,7 +44,7 @@ class CheckoutController extends Controller
             // Set your secret key. Remember to switch to your live secret key in production!
             // See your keys here: https://dashboard.stripe.com/account/apikeys
             // use secret key here
-            Stripe::setApiKey('sk_test_2PftfZwkYHy4T1Xz9fZZeilN');
+            Stripe::setApiKey(env('STRIPE_SECRET'));
 
             $intent = PaymentIntent::create([
                 'amount' => Cart::total(),

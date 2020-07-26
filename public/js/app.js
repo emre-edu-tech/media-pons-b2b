@@ -2375,6 +2375,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _localization_StripeErrorCodes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../localization/StripeErrorCodes */ "./resources/js/localization/StripeErrorCodes.js");
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 //
@@ -2581,9 +2582,20 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
-// Set your publishable key: remember to change this to your live publishable key in production
+//
+//
+//
+//
+//
+//
+//
+//
+//
+ // Set your publishable key: remember to change this to your live publishable key in production
 // See your keys here: https://dashboard.stripe.com/account/apikeys
-var stripe = Stripe('pk_test_1FjxJ13xDitXp8rC6EJvzZaE');
+// Mix variables have been defined in .env file
+
+var stripe = Stripe("pk_test_1FjxJ13xDitXp8rC6EJvzZaE");
 var elements = stripe.elements();
 var card = undefined;
 var stripeStyle = {
@@ -2598,13 +2610,14 @@ var stripeStyle = {
     var _ref;
 
     return _ref = {
+      fullPage: false,
       cities: [],
       cartContents: [],
       subTotal: 0,
       tax: 0,
       total: 0,
       cartCount: 0
-    }, _defineProperty(_ref, "cities", []), _defineProperty(_ref, "buyerDetails", {
+    }, _defineProperty(_ref, "cities", []), _defineProperty(_ref, "isOrderDone", false), _defineProperty(_ref, "buyerDetails", {
       firstName: '',
       lastName: '',
       email: '',
@@ -2644,80 +2657,114 @@ var stripeStyle = {
         var displayError = document.getElementById('card-errors');
 
         if (event.error) {
-          displayError.textContent = event.error.message;
+          var errorMessage = _localization_StripeErrorCodes__WEBPACK_IMPORTED_MODULE_0__["default"].online_payment_error_codes[event.error.code];
+          displayError.textContent = errorMessage;
         } else {
           displayError.textContent = '';
         }
       });
     },
     handleFormSubmission: function handleFormSubmission() {
+      var _this3 = this;
+
       // disable the checkout button
       var checkoutBtn = document.getElementById('checkout-btn');
       var form = document.getElementById('payment-form');
+      checkoutBtn.disabled = true;
+      var loader = this.$loading.show({
+        // Optional parameters
+        container: this.fullPage ? null : this.$refs.formContainer,
+        canCancel: false
+      });
       var billingDetails = this.buyerDetails;
-      form.addEventListener('submit', function (ev) {
-        ev.preventDefault(); // get client secret
+      axios.get('/get-stripe-client-secret', {
+        'customerEmail': billingDetails.email
+      }).then(function (response) {
+        var clientSecret = response.data.client_secret;
+        stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: card,
+            billing_details: {
+              name: billingDetails.nameOnCard,
+              email: billingDetails.email,
+              address: {
+                city: billingDetails.selectedCity,
+                line1: billingDetails.address1,
+                // line2: billingDetails.address2,
+                postal_code: billingDetails.postal_code // phone: billingDetails.phone,
 
-        var clientSecret = null;
-        axios.get('/get-stripe-client-secret', {
-          'customerEmail': billingDetails.email
-        }).then(function (response) {
-          checkoutBtn.disabled = true;
-          clientSecret = response.data.client_secret;
-          stripe.confirmCardPayment(clientSecret, {
-            payment_method: {
-              card: card,
-              billing_details: {
-                name: billingDetails.nameOnCard,
-                email: billingDetails.email,
-                address: {
-                  city: billingDetails.selectedCity,
-                  line1: billingDetails.address1,
-                  // line2: billingDetails.address2,
-                  postal_code: billingDetails.postal_code // phone: billingDetails.phone,
-
-                }
               }
             }
-          }).then(function (result) {
-            if (result.error) {
-              // Show error to your customer (e.g., insufficient funds)
-              console.log(result.error.message);
-              swal.fire('Error!', result.error.message, 'error');
-            } else {
-              // The payment has been processed!
-              if (result.paymentIntent.status === 'succeeded') {
-                swal.fire('Success!', 'Your payment has been accepted. Thanks!', 'success');
-                form.reset();
-                checkoutBtn.disabled = false; // There's a risk of the customer closing the window before callback
-                // execution. Set up a webhook or plugin to listen for the
-                // payment_intent.succeeded event that handles any business critical
-                // post-payment actions.
-              }
-            }
+          }
+        }).then(function (result) {
+          if (result.error) {
+            // Show error to your customer (e.g., insufficient funds)
+            var errorMessage = _localization_StripeErrorCodes__WEBPACK_IMPORTED_MODULE_0__["default"].online_payment_error_codes[result.error.code];
+            swal.fire('Error!', errorMessage, 'error');
+          } else {
+            // The payment has been processed!
+            if (result.paymentIntent.status === 'succeeded') {
+              // Empty shopping cart
+              _this3.emptyCart(); // payment done let the customer know it
 
-            form.reset();
-            checkoutBtn.disabled = false;
-          });
-        })["catch"](function (response) {
-          swal.fire('Error!', response.data.error_message, 'error');
+
+              _this3.isOrderDone = true;
+              swal.fire('Success!', 'Your payment has been accepted. Thanks!', 'success'); // There's a risk of the customer closing the window before callback
+              // execution. Set up a webhook or plugin to listen for the
+              // payment_intent.succeeded event that handles any business critical
+              // post-payment actions.
+            } // reset checkout form
+
+
+            form.reset(); // reset stripe elements
+
+            card.clear();
+          }
+
+          loader.hide();
+          checkoutBtn.disabled = false;
         });
+      })["catch"](function (response) {
+        swal.fire('Error!', response.data.error_message, 'error');
+        loader.hide();
+        checkoutBtn.disabled = false;
+      });
+    },
+    emptyCart: function emptyCart() {
+      var _this4 = this;
+
+      axios.get('/empty-cart').then(function () {
+        _this4.cartContents = [];
+        _this4.subTotal = 0;
+        _this4.tax = 0;
+        _this4.total = 0;
+        _this4.cartCount = 0;
       });
     }
   },
-  created: function created() {
-    this.getCities();
-    this.getCartContents();
-  },
   mounted: function mounted() {
-    // create the card without postal code, mount it on dom element #card-element
+    var _this5 = this;
+
+    this.getCartContents();
+    this.getCities(); // create the card without postal code, mount it on dom element #card-element
     // then attach change event to it.
-    card = elements.create("card", {
-      style: stripeStyle,
-      hidePostalCode: true
+
+    window.addEventListener('load', function () {
+      if (!_this5.noProducts) {
+        card = elements.create("card", {
+          style: stripeStyle,
+          hidePostalCode: true
+        });
+        card.mount('#card-element');
+
+        _this5.listenForErrors();
+      }
     });
-    card.mount("#card-element");
-    this.listenForErrors();
+  },
+  computed: {
+    noProducts: function noProducts() {
+      return this.cartCount === 0;
+    }
   }
 });
 
@@ -8345,6 +8392,25 @@ __webpack_require__.r(__webpack_exports__);
 
 })));
 //# sourceMappingURL=bootstrap.js.map
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loading-overlay/dist/vue-loading.css":
+/*!***********************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loading-overlay/dist/vue-loading.css ***!
+  \***********************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, ".vld-overlay {\n  bottom: 0;\n  left: 0;\n  position: absolute;\n  right: 0;\n  top: 0;\n  align-items: center;\n  display: none;\n  justify-content: center;\n  overflow: hidden;\n  z-index: 9999;\n}\n\n.vld-overlay.is-active {\n  display: flex;\n}\n\n.vld-overlay.is-full-page {\n  z-index: 9999;\n  position: fixed;\n}\n\n.vld-overlay .vld-background {\n  bottom: 0;\n  left: 0;\n  position: absolute;\n  right: 0;\n  top: 0;\n  background: #fff;\n  opacity: 0.5;\n}\n\n.vld-overlay .vld-icon, .vld-parent {\n  position: relative;\n}\n\n", ""]);
+
+// exports
 
 
 /***/ }),
@@ -72159,11 +72225,16 @@ var render = function() {
   return _c("div", { staticClass: "container" }, [
     _c("div", { staticClass: "row justify-content-center" }, [
       _c("div", { staticClass: "col-md-12" }, [
-        _c(
-          "button",
-          { staticClass: "btn btn-danger", on: { click: _vm.emptyCart } },
-          [_vm._v("Empty Cart")]
-        ),
+        !_vm.noProducts
+          ? _c(
+              "button",
+              {
+                staticClass: "btn btn-danger mb-2",
+                on: { click: _vm.emptyCart }
+              },
+              [_vm._v("Empty Cart")]
+            )
+          : _vm._e(),
         _vm._v(" "),
         _vm.noProducts
           ? _c(
@@ -72552,10 +72623,10 @@ render._withStripped = true
 
 /***/ }),
 
-/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true&":
-/*!***********************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true& ***!
-  \***********************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&":
+/*!***********************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1& ***!
+  \***********************************************************************************************************************************************************************************************************/
 /*! exports provided: render, staticRenderFns */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -72568,538 +72639,624 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "container" }, [
-    _c("div", { staticClass: "row" }, [
-      _c("div", { staticClass: "col-md-4 order-md-2 mb-4" }, [
-        _c(
-          "h4",
-          {
-            staticClass:
-              "d-flex justify-content-between align-items-center mb-3"
-          },
-          [
-            _c("span", { staticClass: "text-muted" }, [_vm._v("Your cart")]),
-            _vm._v(" "),
-            _c("span", { staticClass: "badge badge-secondary badge-pill" }, [
-              _vm._v(_vm._s(_vm.cartCount))
-            ])
-          ]
-        ),
-        _vm._v(" "),
-        _c(
-          "ul",
-          { staticClass: "list-group mb-3" },
-          [
-            _vm._l(_vm.cartContents, function(cartContent) {
-              return _c(
-                "li",
+    _vm.isOrderDone
+      ? _c("div", { staticClass: "row" }, [
+          _c("h3", [_vm._v("Your payment has been accepted. Thanks!")])
+        ])
+      : _vm._e(),
+    _vm._v(" "),
+    _vm.noProducts
+      ? _c("div", { staticClass: "row" }, [
+          _c(
+            "div",
+            { staticClass: "empty-cart-notice" },
+            [
+              _c("h3", { staticClass: "text-info mb-3" }, [
+                _vm._v("Your shopping cart is empty!")
+              ]),
+              _vm._v(" "),
+              _c(
+                "router-link",
                 {
-                  key: cartContent.id,
-                  staticClass: "list-group-item d-flex justify-content-between"
+                  staticClass: "btn btn-success",
+                  attrs: { to: { path: "/products" } }
                 },
                 [
-                  _c("img", {
-                    staticClass: "img-fluid",
-                    staticStyle: { "max-width": "30%" },
-                    attrs: { src: "/storage/products/flavour-ananas.png" }
-                  }),
-                  _vm._v(" "),
-                  _c(
-                    "div",
-                    {
-                      staticClass: "ml-2",
-                      staticStyle: { "max-width": "45%" }
-                    },
-                    [
-                      _c("h6", { staticClass: "my-0" }, [
-                        _vm._v(_vm._s(cartContent.name))
-                      ]),
-                      _vm._v(" "),
-                      _c("hr", { staticStyle: { margin: "5px 0" } }),
-                      _vm._v(" "),
-                      _c("small", { staticClass: "text-muted" }, [
-                        _vm._v(
-                          _vm._s(
-                            _vm._f("truncatedText")(
-                              cartContent.model.short_description
-                            )
-                          )
-                        )
-                      ])
-                    ]
-                  ),
-                  _vm._v(" "),
-                  _c(
-                    "div",
-                    {
-                      staticClass: "text-center",
-                      staticStyle: { "max-width": "25%" }
-                    },
-                    [
-                      _c("span", { staticClass: "text-muted" }, [
-                        _vm._v(_vm._s(cartContent.model.regular_price) + " €")
-                      ]),
-                      _vm._v(" "),
-                      _c(
-                        "span",
-                        { staticClass: "badge badge-secondary badge-pill" },
-                        [_vm._v(_vm._s(cartContent.qty))]
-                      )
-                    ]
-                  )
+                  _vm._v("Continue Shopping "),
+                  _c("i", {
+                    staticClass: "fas fa-arrow-circle-right fa-fw mr-2"
+                  })
                 ]
               )
-            }),
-            _vm._v(" "),
+            ],
+            1
+          )
+        ])
+      : _vm._e(),
+    _vm._v(" "),
+    !_vm.noProducts
+      ? _c("div", { staticClass: "row" }, [
+          _c("div", { staticClass: "col-md-4 order-md-2 mb-4" }, [
             _c(
-              "li",
-              { staticClass: "list-group-item d-flex justify-content-between" },
+              "h4",
+              {
+                staticClass:
+                  "d-flex justify-content-between align-items-center mb-3"
+              },
               [
-                _c("span", [_vm._v("Subtotal (EUR)")]),
-                _vm._v(
-                  "\n                    " +
-                    _vm._s(_vm.subTotal) +
-                    "\n                "
-                )
-              ]
-            ),
-            _vm._v(" "),
-            _c(
-              "li",
-              { staticClass: "list-group-item d-flex justify-content-between" },
-              [
-                _c("span", [_vm._v("Tax - %18 (EUR)")]),
-                _vm._v(
-                  "\n                    " +
-                    _vm._s(_vm.tax) +
-                    "\n                "
-                )
-              ]
-            ),
-            _vm._v(" "),
-            _c(
-              "li",
-              { staticClass: "list-group-item d-flex justify-content-between" },
-              [
-                _c("span", [_vm._v("Total (EUR)")]),
-                _vm._v(" "),
-                _c("strong", [_vm._v(_vm._s(_vm.total))])
-              ]
-            )
-          ],
-          2
-        ),
-        _vm._v(" "),
-        _vm._m(0)
-      ]),
-      _vm._v(" "),
-      _c("div", { staticClass: "col-md-8 order-md-1" }, [
-        _c("h4", { staticClass: "mb-3" }, [_vm._v("Billing address")]),
-        _vm._v(" "),
-        _c(
-          "form",
-          { staticClass: "needs-validation", attrs: { id: "payment-form" } },
-          [
-            _c("div", { staticClass: "row" }, [
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "firstName" } }, [
-                  _vm._v("First name (*)")
+                _c("span", { staticClass: "text-muted" }, [
+                  _vm._v("Your cart")
                 ]),
-                _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.firstName,
-                      expression: "buyerDetails.firstName"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "text",
-                    id: "firstName",
-                    placeholder: "",
-                    required: ""
-                  },
-                  domProps: { value: _vm.buyerDetails.firstName },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
-                      }
-                      _vm.$set(
-                        _vm.buyerDetails,
-                        "firstName",
-                        $event.target.value
-                      )
-                    }
-                  }
-                }),
-                _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Valid first name is required.\n                        "
-                  )
-                ])
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "lastName" } }, [
-                  _vm._v("Last name (*)")
-                ]),
-                _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.lastName,
-                      expression: "buyerDetails.lastName"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "text",
-                    id: "lastName",
-                    placeholder: "",
-                    required: ""
-                  },
-                  domProps: { value: _vm.buyerDetails.lastName },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
-                      }
-                      _vm.$set(
-                        _vm.buyerDetails,
-                        "lastName",
-                        $event.target.value
-                      )
-                    }
-                  }
-                }),
-                _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Valid last name is required.\n                        "
-                  )
-                ])
-              ])
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "row" }, [
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "email" } }, [_vm._v("Email (*)")]),
-                _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.email,
-                      expression: "buyerDetails.email"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "email",
-                    id: "email",
-                    placeholder: "you@example.com",
-                    required: ""
-                  },
-                  domProps: { value: _vm.buyerDetails.email },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
-                      }
-                      _vm.$set(_vm.buyerDetails, "email", $event.target.value)
-                    }
-                  }
-                }),
-                _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Please enter a valid email address for shipping updates.\n                        "
-                  )
-                ])
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "phone" } }, [
-                  _vm._v("Telefon (Optional)")
-                ]),
-                _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.phone,
-                      expression: "buyerDetails.phone"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "text",
-                    id: "phone",
-                    placeholder: "+49 111 22 33"
-                  },
-                  domProps: { value: _vm.buyerDetails.phone },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
-                      }
-                      _vm.$set(_vm.buyerDetails, "phone", $event.target.value)
-                    }
-                  }
-                })
-              ])
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "mb-3" }, [
-              _c("label", { attrs: { for: "address" } }, [
-                _vm._v("Address (*)")
-              ]),
-              _vm._v(" "),
-              _c("input", {
-                directives: [
-                  {
-                    name: "model",
-                    rawName: "v-model",
-                    value: _vm.buyerDetails.address1,
-                    expression: "buyerDetails.address1"
-                  }
-                ],
-                staticClass: "form-control",
-                attrs: {
-                  type: "text",
-                  id: "address",
-                  placeholder: "1234 Main St",
-                  required: ""
-                },
-                domProps: { value: _vm.buyerDetails.address1 },
-                on: {
-                  input: function($event) {
-                    if ($event.target.composing) {
-                      return
-                    }
-                    _vm.$set(_vm.buyerDetails, "address1", $event.target.value)
-                  }
-                }
-              }),
-              _vm._v(" "),
-              _c("div", { staticClass: "invalid-feedback" }, [
-                _vm._v(
-                  "\n                        Please enter your shipping address.\n                    "
-                )
-              ])
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "mb-3" }, [
-              _c("label", { attrs: { for: "address2" } }, [
-                _vm._v("Address 2 (Optional)")
-              ]),
-              _vm._v(" "),
-              _c("input", {
-                directives: [
-                  {
-                    name: "model",
-                    rawName: "v-model",
-                    value: _vm.buyerDetails.address2,
-                    expression: "buyerDetails.address2"
-                  }
-                ],
-                staticClass: "form-control",
-                attrs: {
-                  type: "text",
-                  id: "address2",
-                  placeholder: "Apartment or suite"
-                },
-                domProps: { value: _vm.buyerDetails.address2 },
-                on: {
-                  input: function($event) {
-                    if ($event.target.composing) {
-                      return
-                    }
-                    _vm.$set(_vm.buyerDetails, "address2", $event.target.value)
-                  }
-                }
-              })
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "row" }, [
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "city" } }, [_vm._v("City (*)")]),
                 _vm._v(" "),
                 _c(
-                  "select",
+                  "span",
+                  { staticClass: "badge badge-secondary badge-pill" },
+                  [_vm._v(_vm._s(_vm.cartCount))]
+                )
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "ul",
+              { staticClass: "list-group mb-3" },
+              [
+                _vm._l(_vm.cartContents, function(cartContent) {
+                  return _c(
+                    "li",
+                    {
+                      key: cartContent.id,
+                      staticClass:
+                        "list-group-item d-flex justify-content-between"
+                    },
+                    [
+                      _c("img", {
+                        staticClass: "img-fluid",
+                        staticStyle: { "max-width": "30%" },
+                        attrs: { src: "/storage/products/flavour-ananas.png" }
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        {
+                          staticClass: "ml-2",
+                          staticStyle: { "max-width": "45%" }
+                        },
+                        [
+                          _c("h6", { staticClass: "my-0" }, [
+                            _vm._v(_vm._s(cartContent.name))
+                          ]),
+                          _vm._v(" "),
+                          _c("hr", { staticStyle: { margin: "5px 0" } }),
+                          _vm._v(" "),
+                          _c("small", { staticClass: "text-muted" }, [
+                            _vm._v(
+                              _vm._s(
+                                _vm._f("truncatedText")(
+                                  cartContent.model.short_description
+                                )
+                              )
+                            )
+                          ])
+                        ]
+                      ),
+                      _vm._v(" "),
+                      _c(
+                        "div",
+                        {
+                          staticClass: "text-center",
+                          staticStyle: { "max-width": "25%" }
+                        },
+                        [
+                          _c("span", { staticClass: "text-muted" }, [
+                            _vm._v(
+                              _vm._s(cartContent.model.regular_price) + " €"
+                            )
+                          ]),
+                          _vm._v(" "),
+                          _c(
+                            "span",
+                            { staticClass: "badge badge-secondary badge-pill" },
+                            [_vm._v(_vm._s(cartContent.qty))]
+                          )
+                        ]
+                      )
+                    ]
+                  )
+                }),
+                _vm._v(" "),
+                _c(
+                  "li",
                   {
+                    staticClass:
+                      "list-group-item d-flex justify-content-between"
+                  },
+                  [
+                    _c("span", [_vm._v("Subtotal (EUR)")]),
+                    _vm._v(
+                      "\n                    " +
+                        _vm._s(_vm.subTotal) +
+                        "\n                "
+                    )
+                  ]
+                ),
+                _vm._v(" "),
+                _c(
+                  "li",
+                  {
+                    staticClass:
+                      "list-group-item d-flex justify-content-between"
+                  },
+                  [
+                    _c("span", [_vm._v("Tax - %18 (EUR)")]),
+                    _vm._v(
+                      "\n                    " +
+                        _vm._s(_vm.tax) +
+                        "\n                "
+                    )
+                  ]
+                ),
+                _vm._v(" "),
+                _c(
+                  "li",
+                  {
+                    staticClass:
+                      "list-group-item d-flex justify-content-between"
+                  },
+                  [
+                    _c("span", [_vm._v("Total (EUR)")]),
+                    _vm._v(" "),
+                    _c("strong", [_vm._v(_vm._s(_vm.total))])
+                  ]
+                )
+              ],
+              2
+            ),
+            _vm._v(" "),
+            _vm._m(0)
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "col-md-8 order-md-1" }, [
+            _c("h4", { staticClass: "mb-3" }, [_vm._v("Billing address")]),
+            _vm._v(" "),
+            _c(
+              "form",
+              {
+                ref: "formContainer",
+                staticClass: "needs-validation vld-parent",
+                attrs: { id: "payment-form" },
+                on: {
+                  submit: function($event) {
+                    $event.preventDefault()
+                    return _vm.handleFormSubmission($event)
+                  }
+                }
+              },
+              [
+                _c("div", { staticClass: "row" }, [
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "firstName" } }, [
+                      _vm._v("First name (*)")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.firstName,
+                          expression: "buyerDetails.firstName"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "text",
+                        id: "firstName",
+                        placeholder: "",
+                        required: ""
+                      },
+                      domProps: { value: _vm.buyerDetails.firstName },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "firstName",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Valid first name is required.\n                        "
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "lastName" } }, [
+                      _vm._v("Last name (*)")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.lastName,
+                          expression: "buyerDetails.lastName"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "text",
+                        id: "lastName",
+                        placeholder: "",
+                        required: ""
+                      },
+                      domProps: { value: _vm.buyerDetails.lastName },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "lastName",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Valid last name is required.\n                        "
+                      )
+                    ])
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row" }, [
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "email" } }, [
+                      _vm._v("Email (*)")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.email,
+                          expression: "buyerDetails.email"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "email",
+                        id: "email",
+                        placeholder: "you@example.com",
+                        required: ""
+                      },
+                      domProps: { value: _vm.buyerDetails.email },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "email",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Please enter a valid email address for shipping updates.\n                        "
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "phone" } }, [
+                      _vm._v("Telefon (Optional)")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.phone,
+                          expression: "buyerDetails.phone"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "text",
+                        id: "phone",
+                        placeholder: "+49 111 22 33"
+                      },
+                      domProps: { value: _vm.buyerDetails.phone },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "phone",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    })
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "mb-3" }, [
+                  _c("label", { attrs: { for: "address" } }, [
+                    _vm._v("Address (*)")
+                  ]),
+                  _vm._v(" "),
+                  _c("input", {
                     directives: [
                       {
                         name: "model",
                         rawName: "v-model",
-                        value: _vm.buyerDetails.selectedCity,
-                        expression: "buyerDetails.selectedCity"
+                        value: _vm.buyerDetails.address1,
+                        expression: "buyerDetails.address1"
                       }
                     ],
-                    staticClass: "custom-select d-block w-100",
-                    attrs: { id: "city", name: "city", required: "" },
+                    staticClass: "form-control",
+                    attrs: {
+                      type: "text",
+                      id: "address",
+                      placeholder: "1234 Main St",
+                      required: ""
+                    },
+                    domProps: { value: _vm.buyerDetails.address1 },
                     on: {
-                      change: function($event) {
-                        var $$selectedVal = Array.prototype.filter
-                          .call($event.target.options, function(o) {
-                            return o.selected
-                          })
-                          .map(function(o) {
-                            var val = "_value" in o ? o._value : o.value
-                            return val
-                          })
+                      input: function($event) {
+                        if ($event.target.composing) {
+                          return
+                        }
                         _vm.$set(
                           _vm.buyerDetails,
-                          "selectedCity",
-                          $event.target.multiple
-                            ? $$selectedVal
-                            : $$selectedVal[0]
+                          "address1",
+                          $event.target.value
                         )
                       }
                     }
-                  },
-                  [
-                    _c("option", { attrs: { value: "" } }, [
-                      _vm._v("Stadt wählen")
+                  }),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "invalid-feedback" }, [
+                    _vm._v(
+                      "\n                        Please enter your shipping address.\n                    "
+                    )
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "mb-3" }, [
+                  _c("label", { attrs: { for: "address2" } }, [
+                    _vm._v("Address 2 (Optional)")
+                  ]),
+                  _vm._v(" "),
+                  _c("input", {
+                    directives: [
+                      {
+                        name: "model",
+                        rawName: "v-model",
+                        value: _vm.buyerDetails.address2,
+                        expression: "buyerDetails.address2"
+                      }
+                    ],
+                    staticClass: "form-control",
+                    attrs: {
+                      type: "text",
+                      id: "address2",
+                      placeholder: "Apartment or suite"
+                    },
+                    domProps: { value: _vm.buyerDetails.address2 },
+                    on: {
+                      input: function($event) {
+                        if ($event.target.composing) {
+                          return
+                        }
+                        _vm.$set(
+                          _vm.buyerDetails,
+                          "address2",
+                          $event.target.value
+                        )
+                      }
+                    }
+                  })
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "row" }, [
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "city" } }, [
+                      _vm._v("City (*)")
                     ]),
                     _vm._v(" "),
-                    _vm._l(_vm.cities, function(city) {
-                      return _c(
-                        "option",
-                        { key: city.id, domProps: { value: city.name } },
-                        [_vm._v(_vm._s(city.name))]
+                    _c(
+                      "select",
+                      {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.buyerDetails.selectedCity,
+                            expression: "buyerDetails.selectedCity"
+                          }
+                        ],
+                        staticClass: "custom-select d-block w-100",
+                        attrs: { id: "city", name: "city", required: "" },
+                        on: {
+                          change: function($event) {
+                            var $$selectedVal = Array.prototype.filter
+                              .call($event.target.options, function(o) {
+                                return o.selected
+                              })
+                              .map(function(o) {
+                                var val = "_value" in o ? o._value : o.value
+                                return val
+                              })
+                            _vm.$set(
+                              _vm.buyerDetails,
+                              "selectedCity",
+                              $event.target.multiple
+                                ? $$selectedVal
+                                : $$selectedVal[0]
+                            )
+                          }
+                        }
+                      },
+                      [
+                        _c("option", { attrs: { value: "" } }, [
+                          _vm._v("Stadt wählen")
+                        ]),
+                        _vm._v(" "),
+                        _vm._l(_vm.cities, function(city) {
+                          return _c(
+                            "option",
+                            { key: city.id, domProps: { value: city.name } },
+                            [_vm._v(_vm._s(city.name))]
+                          )
+                        })
+                      ],
+                      2
+                    ),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Please provide a valid city.\n                        "
                       )
-                    })
-                  ],
-                  2
-                ),
-                _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Please provide a valid city.\n                        "
-                  )
-                ])
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "col-md-6 mb-3" }, [
-                _c("label", { attrs: { for: "zip" } }, [_vm._v("Zip (*)")]),
-                _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.zipcode,
-                      expression: "buyerDetails.zipcode"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "text",
-                    id: "zip",
-                    name: "zip",
-                    placeholder: "",
-                    required: ""
-                  },
-                  domProps: { value: _vm.buyerDetails.zipcode },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "col-md-6 mb-3" }, [
+                    _c("label", { attrs: { for: "zip" } }, [_vm._v("Zip (*)")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.zipcode,
+                          expression: "buyerDetails.zipcode"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "text",
+                        id: "zip",
+                        name: "zip",
+                        placeholder: "",
+                        required: ""
+                      },
+                      domProps: { value: _vm.buyerDetails.zipcode },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "zipcode",
+                            $event.target.value
+                          )
+                        }
                       }
-                      _vm.$set(_vm.buyerDetails, "zipcode", $event.target.value)
-                    }
-                  }
-                }),
-                _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Zip code required.\n                        "
-                  )
-                ])
-              ])
-            ]),
-            _vm._v(" "),
-            _c("hr", { staticClass: "mb-4" }),
-            _vm._v(" "),
-            _c("h4", { staticClass: "mb-3" }, [_vm._v("Payment")]),
-            _vm._v(" "),
-            _vm._m(1),
-            _vm._v(" "),
-            _c("div", { staticClass: "row" }, [
-              _c("div", { staticClass: "col-md-12 mb-3" }, [
-                _c("label", { attrs: { for: "name-on-card" } }, [
-                  _vm._v("Name on card (*)")
+                    }),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Zip code required.\n                        "
+                      )
+                    ])
+                  ])
                 ]),
                 _vm._v(" "),
-                _c("input", {
-                  directives: [
-                    {
-                      name: "model",
-                      rawName: "v-model",
-                      value: _vm.buyerDetails.nameOnCard,
-                      expression: "buyerDetails.nameOnCard"
-                    }
-                  ],
-                  staticClass: "form-control",
-                  attrs: {
-                    type: "text",
-                    id: "name-on-card",
-                    placeholder: "",
-                    required: ""
-                  },
-                  domProps: { value: _vm.buyerDetails.nameOnCard },
-                  on: {
-                    input: function($event) {
-                      if ($event.target.composing) {
-                        return
-                      }
-                      _vm.$set(
-                        _vm.buyerDetails,
-                        "nameOnCard",
-                        $event.target.value
-                      )
-                    }
-                  }
-                }),
+                _c("hr", { staticClass: "mb-4" }),
                 _vm._v(" "),
-                _c("small", { staticClass: "text-muted" }, [
-                  _vm._v("Full name as displayed on card")
+                _c("h4", { staticClass: "mb-3" }, [_vm._v("Payment")]),
+                _vm._v(" "),
+                _vm._m(1),
+                _vm._v(" "),
+                _c("div", { staticClass: "row" }, [
+                  _c("div", { staticClass: "col-md-12 mb-3" }, [
+                    _c("label", { attrs: { for: "name-on-card" } }, [
+                      _vm._v("Name on card (*)")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.buyerDetails.nameOnCard,
+                          expression: "buyerDetails.nameOnCard"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: {
+                        type: "text",
+                        id: "name-on-card",
+                        placeholder: "",
+                        required: ""
+                      },
+                      domProps: { value: _vm.buyerDetails.nameOnCard },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.buyerDetails,
+                            "nameOnCard",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("small", { staticClass: "text-muted" }, [
+                      _vm._v("Full name as displayed on card")
+                    ]),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "invalid-feedback" }, [
+                      _vm._v(
+                        "\n                            Name on card is required\n                        "
+                      )
+                    ])
+                  ])
                 ]),
                 _vm._v(" "),
-                _c("div", { staticClass: "invalid-feedback" }, [
-                  _vm._v(
-                    "\n                            Name on card is required\n                        "
-                  )
-                ])
-              ])
-            ]),
-            _vm._v(" "),
-            _vm._m(2),
-            _vm._v(" "),
-            _c("hr", { staticClass: "mb-4" }),
-            _vm._v(" "),
-            _c(
-              "button",
-              {
-                staticClass: "btn btn-primary btn-lg btn-block",
-                attrs: { id: "checkout-btn" },
-                on: { click: _vm.handleFormSubmission }
-              },
-              [_vm._v("Continue to checkout")]
+                _vm._m(2),
+                _vm._v(" "),
+                _c("hr", { staticClass: "mb-4" }),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    staticClass: "btn btn-primary btn-lg btn-block",
+                    attrs: { id: "checkout-btn" }
+                  },
+                  [_vm._v("Continue to checkout")]
+                )
+              ]
             )
-          ]
-        )
-      ])
-    ])
+          ])
+        ])
+      : _vm._e()
   ])
 }
 var staticRenderFns = [
@@ -76117,6 +76274,47 @@ function normalizeComponent (
   }
 }
 
+
+/***/ }),
+
+/***/ "./node_modules/vue-loading-overlay/dist/vue-loading.css":
+/*!***************************************************************!*\
+  !*** ./node_modules/vue-loading-overlay/dist/vue-loading.css ***!
+  \***************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../css-loader??ref--6-1!../../postcss-loader/src??ref--6-2!./vue-loading.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loading-overlay/dist/vue-loading.css");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
+/***/ "./node_modules/vue-loading-overlay/dist/vue-loading.min.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/vue-loading-overlay/dist/vue-loading.min.js ***!
+  \******************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+!function(t,e){ true?module.exports=e():undefined}("undefined"!=typeof self?self:this,(function(){return function(t){var e={};function i(n){if(e[n])return e[n].exports;var r=e[n]={i:n,l:!1,exports:{}};return t[n].call(r.exports,r,r.exports,i),r.l=!0,r.exports}return i.m=t,i.c=e,i.d=function(t,e,n){i.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:n})},i.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})},i.t=function(t,e){if(1&e&&(t=i(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var n=Object.create(null);if(i.r(n),Object.defineProperty(n,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var r in t)i.d(n,r,function(e){return t[e]}.bind(null,r));return n},i.n=function(t){var e=t&&t.__esModule?function(){return t.default}:function(){return t};return i.d(e,"a",e),e},i.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},i.p="",i(i.s=1)}([function(t,e,i){},function(t,e,i){"use strict";i.r(e);var n="undefined"!=typeof window?window.HTMLElement:Object,r={mounted:function(){document.addEventListener("focusin",this.focusIn)},methods:{focusIn:function(t){if(this.isActive&&t.target!==this.$el&&!this.$el.contains(t.target)){var e=this.container?this.container:this.isFullPage?null:this.$el.parentElement;(this.isFullPage||e&&e.contains(t.target))&&(t.preventDefault(),this.$el.focus())}}},beforeDestroy:function(){document.removeEventListener("focusin",this.focusIn)}};function a(t,e,i,n,r,a,o,s){var u,l="function"==typeof t?t.options:t;if(e&&(l.render=e,l.staticRenderFns=i,l._compiled=!0),n&&(l.functional=!0),a&&(l._scopeId="data-v-"+a),o?(u=function(t){(t=t||this.$vnode&&this.$vnode.ssrContext||this.parent&&this.parent.$vnode&&this.parent.$vnode.ssrContext)||"undefined"==typeof __VUE_SSR_CONTEXT__||(t=__VUE_SSR_CONTEXT__),r&&r.call(this,t),t&&t._registeredComponents&&t._registeredComponents.add(o)},l._ssrRegister=u):r&&(u=s?function(){r.call(this,this.$root.$options.shadowRoot)}:r),u)if(l.functional){l._injectStyles=u;var c=l.render;l.render=function(t,e){return u.call(e),c(t,e)}}else{var d=l.beforeCreate;l.beforeCreate=d?[].concat(d,u):[u]}return{exports:t,options:l}}var o=a({name:"spinner",props:{color:{type:String,default:"#000"},height:{type:Number,default:64},width:{type:Number,default:64}}},(function(){var t=this.$createElement,e=this._self._c||t;return e("svg",{attrs:{viewBox:"0 0 38 38",xmlns:"http://www.w3.org/2000/svg",width:this.width,height:this.height,stroke:this.color}},[e("g",{attrs:{fill:"none","fill-rule":"evenodd"}},[e("g",{attrs:{transform:"translate(1 1)","stroke-width":"2"}},[e("circle",{attrs:{"stroke-opacity":".25",cx:"18",cy:"18",r:"18"}}),e("path",{attrs:{d:"M36 18c0-9.94-8.06-18-18-18"}},[e("animateTransform",{attrs:{attributeName:"transform",type:"rotate",from:"0 18 18",to:"360 18 18",dur:"0.8s",repeatCount:"indefinite"}})],1)])])])}),[],!1,null,null,null).exports,s=a({name:"dots",props:{color:{type:String,default:"#000"},height:{type:Number,default:240},width:{type:Number,default:60}}},(function(){var t=this.$createElement,e=this._self._c||t;return e("svg",{attrs:{viewBox:"0 0 120 30",xmlns:"http://www.w3.org/2000/svg",fill:this.color,width:this.width,height:this.height}},[e("circle",{attrs:{cx:"15",cy:"15",r:"15"}},[e("animate",{attrs:{attributeName:"r",from:"15",to:"15",begin:"0s",dur:"0.8s",values:"15;9;15",calcMode:"linear",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"fill-opacity",from:"1",to:"1",begin:"0s",dur:"0.8s",values:"1;.5;1",calcMode:"linear",repeatCount:"indefinite"}})]),e("circle",{attrs:{cx:"60",cy:"15",r:"9","fill-opacity":"0.3"}},[e("animate",{attrs:{attributeName:"r",from:"9",to:"9",begin:"0s",dur:"0.8s",values:"9;15;9",calcMode:"linear",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"fill-opacity",from:"0.5",to:"0.5",begin:"0s",dur:"0.8s",values:".5;1;.5",calcMode:"linear",repeatCount:"indefinite"}})]),e("circle",{attrs:{cx:"105",cy:"15",r:"15"}},[e("animate",{attrs:{attributeName:"r",from:"15",to:"15",begin:"0s",dur:"0.8s",values:"15;9;15",calcMode:"linear",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"fill-opacity",from:"1",to:"1",begin:"0s",dur:"0.8s",values:"1;.5;1",calcMode:"linear",repeatCount:"indefinite"}})])])}),[],!1,null,null,null).exports,u=a({name:"bars",props:{color:{type:String,default:"#000"},height:{type:Number,default:40},width:{type:Number,default:40}}},(function(){var t=this.$createElement,e=this._self._c||t;return e("svg",{attrs:{xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 30 30",height:this.height,width:this.width,fill:this.color}},[e("rect",{attrs:{x:"0",y:"13",width:"4",height:"5"}},[e("animate",{attrs:{attributeName:"height",attributeType:"XML",values:"5;21;5",begin:"0s",dur:"0.6s",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"y",attributeType:"XML",values:"13; 5; 13",begin:"0s",dur:"0.6s",repeatCount:"indefinite"}})]),e("rect",{attrs:{x:"10",y:"13",width:"4",height:"5"}},[e("animate",{attrs:{attributeName:"height",attributeType:"XML",values:"5;21;5",begin:"0.15s",dur:"0.6s",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"y",attributeType:"XML",values:"13; 5; 13",begin:"0.15s",dur:"0.6s",repeatCount:"indefinite"}})]),e("rect",{attrs:{x:"20",y:"13",width:"4",height:"5"}},[e("animate",{attrs:{attributeName:"height",attributeType:"XML",values:"5;21;5",begin:"0.3s",dur:"0.6s",repeatCount:"indefinite"}}),e("animate",{attrs:{attributeName:"y",attributeType:"XML",values:"13; 5; 13",begin:"0.3s",dur:"0.6s",repeatCount:"indefinite"}})])])}),[],!1,null,null,null).exports,l=a({name:"vue-loading",mixins:[r],props:{active:Boolean,programmatic:Boolean,container:[Object,Function,n],isFullPage:{type:Boolean,default:!0},transition:{type:String,default:"fade"},canCancel:Boolean,onCancel:{type:Function,default:function(){}},color:String,backgroundColor:String,opacity:Number,width:Number,height:Number,zIndex:Number,loader:{type:String,default:"spinner"}},data:function(){return{isActive:this.active}},components:{Spinner:o,Dots:s,Bars:u},beforeMount:function(){this.programmatic&&(this.container?(this.isFullPage=!1,this.container.appendChild(this.$el)):document.body.appendChild(this.$el))},mounted:function(){this.programmatic&&(this.isActive=!0),document.addEventListener("keyup",this.keyPress)},methods:{cancel:function(){this.canCancel&&this.isActive&&(this.hide(),this.onCancel.apply(null,arguments))},hide:function(){var t=this;this.$emit("hide"),this.$emit("update:active",!1),this.programmatic&&(this.isActive=!1,setTimeout((function(){var e;t.$destroy(),void 0!==(e=t.$el).remove?e.remove():e.parentNode.removeChild(e)}),150))},keyPress:function(t){27===t.keyCode&&this.cancel()}},watch:{active:function(t){this.isActive=t}},beforeDestroy:function(){document.removeEventListener("keyup",this.keyPress)}},(function(){var t=this,e=t.$createElement,i=t._self._c||e;return i("transition",{attrs:{name:t.transition}},[i("div",{directives:[{name:"show",rawName:"v-show",value:t.isActive,expression:"isActive"}],staticClass:"vld-overlay is-active",class:{"is-full-page":t.isFullPage},style:{zIndex:t.zIndex},attrs:{tabindex:"0","aria-busy":t.isActive,"aria-label":"Loading"}},[i("div",{staticClass:"vld-background",style:{background:t.backgroundColor,opacity:t.opacity},on:{click:function(e){return e.preventDefault(),t.cancel(e)}}}),i("div",{staticClass:"vld-icon"},[t._t("before"),t._t("default",[i(t.loader,{tag:"component",attrs:{color:t.color,width:t.width,height:t.height}})]),t._t("after")],2)])])}),[],!1,null,null,null).exports,c=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};return{show:function(){var n=arguments.length>0&&void 0!==arguments[0]?arguments[0]:e,r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:i,a={programmatic:!0},o=Object.assign({},e,n,a),s=new(t.extend(l))({el:document.createElement("div"),propsData:o}),u=Object.assign({},i,r);return Object.keys(u).map((function(t){s.$slots[t]=u[t]})),s}}};i(0);l.install=function(t){var e=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{},n=c(t,e,i);t.$loading=n,t.prototype.$loading=n};e.default=l}]).default}));
 
 /***/ }),
 
@@ -91274,6 +91472,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _objectToFormData__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_objectToFormData__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var vue_router__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! vue-router */ "./node_modules/vue-router/dist/vue-router.esm.js");
 /* harmony import */ var _Gate__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./Gate */ "./resources/js/Gate.js");
+/* harmony import */ var vue_loading_overlay__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! vue-loading-overlay */ "./node_modules/vue-loading-overlay/dist/vue-loading.min.js");
+/* harmony import */ var vue_loading_overlay__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(vue_loading_overlay__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var vue_loading_overlay_dist_vue_loading_css__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! vue-loading-overlay/dist/vue-loading.css */ "./node_modules/vue-loading-overlay/dist/vue-loading.css");
+/* harmony import */ var vue_loading_overlay_dist_vue_loading_css__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(vue_loading_overlay_dist_vue_loading_css__WEBPACK_IMPORTED_MODULE_8__);
 /**
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
@@ -91394,6 +91596,13 @@ Vue.filter('truncatedText', function (text) {
  // We want to access gate class everywhere from application
 
 Vue.prototype.$gate = new _Gate__WEBPACK_IMPORTED_MODULE_6__["default"](window.user); // ########################
+// # vue loading overlay
+
+ // Import stylesheet
+
+ // Init plugin
+
+Vue.use(vue_loading_overlay__WEBPACK_IMPORTED_MODULE_7___default.a); // ########################
 
 /**
  * The following block of code may be used to automatically register your
@@ -91707,7 +91916,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Checkout.vue?vue&type=template&id=715e4fb1&scoped=true& */ "./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true&");
+/* harmony import */ var _Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Checkout.vue?vue&type=template&id=715e4fb1& */ "./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&");
 /* harmony import */ var _Checkout_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Checkout.vue?vue&type=script&lang=js& */ "./resources/js/components/Checkout.vue?vue&type=script&lang=js&");
 /* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
 
@@ -91719,11 +91928,11 @@ __webpack_require__.r(__webpack_exports__);
 
 var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
   _Checkout_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
-  _Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
-  _Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  _Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
   false,
   null,
-  "715e4fb1",
+  null,
   null
   
 )
@@ -91749,19 +91958,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true&":
-/*!*****************************************************************************************!*\
-  !*** ./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true& ***!
-  \*****************************************************************************************/
+/***/ "./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&":
+/*!*****************************************************************************!*\
+  !*** ./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1& ***!
+  \*****************************************************************************/
 /*! exports provided: render, staticRenderFns */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Checkout.vue?vue&type=template&id=715e4fb1&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&scoped=true&");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Checkout.vue?vue&type=template&id=715e4fb1& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Checkout.vue?vue&type=template&id=715e4fb1&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Checkout_vue_vue_type_template_id_715e4fb1___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 
@@ -92646,6 +92855,113 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Users_vue_vue_type_template_id_30c27aa6___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
+
+/***/ }),
+
+/***/ "./resources/js/localization/StripeErrorCodes.js":
+/*!*******************************************************!*\
+  !*** ./resources/js/localization/StripeErrorCodes.js ***!
+  \*******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+var online_payment_error_codes = {
+  account_already_exists: "The email address provided for the creation of a deferred account already has an account associated with it. Use the OAuth flow to connect the existing account to your platform.",
+  account_country_invalid_address: "The country of the business address provided does not match the country of the account. Businesses must be located in the same country as the account.",
+  account_invalid: "The account ID provided as a value for the Stripe-Account header is invalid. Check that your requests are specifying a valid account ID.",
+  account_number_invalid: "The bank account number provided is invalid (e.g., missing digits). Bank account information varies from country to country. We recommend creating validations in your entry forms based on the bank account formats we provide.",
+  alipay_upgrade_required: "This method for creating Alipay payments is not supported anymore. Please upgrade your integration to use Sources instead.",
+  amount_too_large: "The specified amount is greater than the maximum amount allowed. Use a lower amount and try again.",
+  amount_too_small: "The specified amount is less than the minimum amount allowed. Use a higher amount and try again.",
+  api_key_expired: "The API key provided has expired. Obtain your current API keys from the Dashboard and update your integration to use them.",
+  balance_insufficient: "The transfer or payout could not be completed because the associated account does not have a sufficient balance available. Create a new transfer or payout using an amount less than or equal to the account’s available balance.",
+  bank_account_exists: "The bank account provided already exists on the specified Customer object. If the bank account should also be attached to a different customer, include the correct customer ID when making the request again.",
+  bank_account_unusable: "The bank account provided cannot be used for payouts. A different bank account must be used.",
+  bank_account_unverified: "Your Connect platform is attempting to share an unverified bank account with a connected account.",
+  bitcoin_upgrade_required: "This method for creating Bitcoin payments is not supported anymore. Please upgrade your integration to use Sources instead.",
+  card_declined: "The card has been declined. When a card is declined, the error returned also includes the decline_code attribute with the reason why the card was declined. Refer to our decline codes documentation to learn more.",
+  charge_already_captured: "The charge you’re attempting to capture has already been captured. Update the request with an uncaptured charge ID.",
+  charge_already_refunded: "The charge you’re attempting to refund has already been refunded. Update the request to use the ID of a charge that has not been refunded.",
+  charge_disputed: "The charge you’re attempting to refund has been charged back. Check the disputes documentation to learn how to respond to the dispute.",
+  charge_exceeds_source_limit: "This charge would cause you to exceed your rolling-window processing limit for this source type. Please retry the charge later, or contact us to request a higher processing limit.",
+  charge_expired_for_capture: "The charge cannot be captured as the authorization has expired. Auth and capture charges must be captured within seven days.",
+  country_unsupported: "Your platform attempted to create a custom account in a country that is not yet supported. Make sure that users can only sign up in countries supported by custom accounts.",
+  coupon_expired: "The coupon provided for a subscription or order has expired. Either create a new coupon, or use an existing one that is valid.",
+  customer_max_subscriptions: "The maximum number of subscriptions for a customer has been reached. Contact us if you are receiving this error.",
+  email_invalid: "The email address is invalid (e.g., not properly formatted). Check that the email address is properly formatted and only includes allowed characters.",
+  expired_card: "The card has expired. Check the expiration date or use a different card.",
+  idempotency_key_in_use: "The idempotency key provided is currently being used in another request. This occurs if your integration is making duplicate requests simultaneously.",
+  incomplete_number: "Ihre Kartennummer ist unvollständig.",
+  incomplete_expiry: "Das Ablaufdatum Ihrer Karte ist unvollständig.",
+  incomplete_cvc: "Der Sicherheitscode Ihrer Karte ist unvollständig.",
+  incorrect_address: "The card’s address is incorrect. Check the card’s address or use a different card.",
+  incorrect_cvc: "The card’s security code is incorrect. Check the card’s security code or use a different card.",
+  incorrect_number: "The card number is incorrect. Check the card’s number or use a different card.",
+  incorrect_zip: "The card’s postal code is incorrect. Check the card’s postal code or use a different card.",
+  instant_payouts_unsupported: "The debit card provided as an external account does not support instant payouts. Provide another debit card or use a bank account instead.",
+  invalid_card_type: "The card provided as an external account is not a debit card. Provide a debit card or use a bank account instead.",
+  invalid_charge_amount: "The specified amount is invalid. The charge amount must be a positive integer in the smallest currency unit, and not exceed the minimum or maximum amount.",
+  invalid_cvc: "The card’s security code is invalid. Check the card’s security code or use a different card.",
+  invalid_expiry_month: "The card’s expiration month is incorrect. Check the expiration date or use a different card.",
+  invalid_expiry_year: "The card’s expiration year is incorrect. Check the expiration date or use a different card.",
+  invalid_expiry_year_past: "Ihre Karte Ablaufjahr ist in der Vergangenheit.",
+  invalid_number: "The card number is invalid. Check the card details or use a different card.",
+  invalid_source_usage: "The source cannot be used because it is not in the correct state (e.g., a charge request is trying to use a source with a pending, failed, or consumed source). Check the status of the source you are attempting to use.",
+  invoice_no_customer_line_items: "An invoice cannot be generated for the specified customer as there are no pending invoice items. Check that the correct customer is being specified or create any necessary invoice items first.",
+  invoice_no_subscription_line_items: "An invoice cannot be generated for the specified subscription as there are no pending invoice items. Check that the correct subscription is being specified or create any necessary invoice items first.",
+  invoice_not_editable: "The specified invoice can no longer be edited. Instead, consider creating additional invoice items that will be applied to the next invoice. You can either manually generate the next invoice or wait for it to be automatically generated at the end of the billing cycle.",
+  invoice_upcoming_none: "There is no upcoming invoice on the specified customer to preview. Only customers with active subscriptions or pending invoice items have invoices that can be previewed.",
+  livemode_mismatch: "Test and live mode API keys, requests, and objects are only available within the mode they are in.",
+  missing: "Both a customer and source ID have been provided, but the source has not been saved to the customer. To create a charge for a customer with a specified source, you must first save the card details.",
+  not_allowed_on_standard_account: "Transfers and payouts on behalf of a Standard connected account are not allowed.",
+  order_creation_failed: "The order could not be created. Check the order details and then try again.",
+  order_required_settings: "The order could not be processed as it is missing required information. Check the information provided and try again.",
+  order_status_invalid: "The order cannot be updated because the status provided is either invalid or does not follow the order lifecycle (e.g., an order cannot transition from created to fulfilled without first transitioning to paid).",
+  order_upstream_timeout: "The request timed out. Try again later.",
+  out_of_inventory: "The SKU is out of stock. If more stock is available, update the SKU’s inventory quantity and try again.",
+  parameter_invalid_empty: "One or more required values were not provided. Make sure requests include all required parameters.",
+  parameter_invalid_integer: "One or more of the parameters requires an integer, but the values provided were a different type. Make sure that only supported values are provided for each attribute. Refer to our API documentation to look up the type of data each attribute supports.",
+  parameter_invalid_string_blank: "One or more values provided only included whitespace. Check the values in your request and update any that contain only whitespace.",
+  parameter_invalid_string_empty: "One or more required string values is empty. Make sure that string values contain at least one character.",
+  parameter_missing: "One or more required values are missing. Check our API documentation to see which values are required to create or modify the specified resource.",
+  parameter_unknown: "The request contains one or more unexpected parameters. Remove these and try again.",
+  parameters_exclusive: "Two or more mutually exclusive parameters were provided. Check our API documentation or the returned error message to see which values are permitted when creating or modifying the specified resource.",
+  payment_intent_authentication_failure: "The provided source has failed authentication. Provide source_data or a new source to attempt to fulfill this PaymentIntent again.",
+  payment_intent_incompatible_payment_method: "The PaymentIntent expected a payment method with different properties than what was provided.",
+  payment_intent_invalid_parameter: "One or more provided parameters was not allowed for the given operation on the PaymentIntent. Check our API reference or the returned error message to see which values were not correct for that PaymentIntent.",
+  payment_intent_payment_attempt_failed: "The latest payment attempt for the PaymentIntent has failed. Check the last_payment_error property on the PaymentIntent for more details, and provide source_data or a new source to attempt to fulfill this PaymentIntent again.",
+  payment_intent_unexpected_state: "The PaymentIntent’s state was incompatible with the operation you were trying to perform.",
+  payment_method_unactivated: "The charge cannot be created as the payment method used has not been activated. Activate the payment method in the Dashboard, then try again.",
+  payment_method_unexpected_state: "The provided payment method’s state was incompatible with the operation you were trying to perform. Confirm that the payment method is in an allowed state for the given operation before attempting to perform it.",
+  payouts_not_allowed: "Payouts have been disabled on the connected account. Check the connected account’s status to see if any additional information needs to be provided, or if payouts have been disabled for another reason.",
+  platform_api_key_expired: "The API key provided by your Connect platform has expired. This occurs if your platform has either generated a new key or the connected account has been disconnected from the platform. Obtain your current API keys from the Dashboard and update your integration, or reach out to the user and reconnect the account.",
+  postal_code_invalid: "The postal code provided was incorrect.",
+  processing_error: "An error occurred while processing the card. Check the card details are correct or use a different card.",
+  product_inactive: "The product this SKU belongs to is no longer available for purchase.",
+  rate_limit: "Too many requests hit the API too quickly. We recommend an exponential backoff of your requests.",
+  resource_already_exists: "A resource with a user-specified ID (e.g., plan or coupon) already exists. Use a different, unique value for id and try again.",
+  resource_missing: "The ID provided is not valid. Either the resource does not exist, or an ID for a different resource has been provided.",
+  routing_number_invalid: "The bank routing number provided is invalid.",
+  secret_key_required: "The API key provided is a publishable key, but a secret key is required. Obtain your current API keys from the Dashboard and update your integration to use them.",
+  sepa_unsupported_account: "Your account does not support SEPA payments.",
+  shipping_calculation_failed: "Shipping calculation failed as the information provided was either incorrect or could not be verified.",
+  sku_inactive: "The SKU is inactive and no longer available for purchase. Use a different SKU, or make the current SKU active again.",
+  state_unsupported: "Occurs when providing the legal_entity information for a U.S. custom account, if the provided state is not supported. (This is mostly associated states and territories.)",
+  tax_id_invalid: "The tax ID number provided is invalid (e.g., missing digits). Tax ID information varies from country to country, but must be at least nine digits.",
+  taxes_calculation_failed: "Tax calculation for the order failed.",
+  testmode_charges_only: "Your account has not been activated and can only make test charges. Activate your account in the Dashboard to begin processing live charges.",
+  tls_version_unsupported: "Your integration is using an older version of TLS that is unsupported. You must be using TLS 1.2 or above.",
+  token_already_used: "The token provided has already been used. You must create a new token before you can retry this request.",
+  token_in_use: "The token provided is currently being used in another request. This occurs if your integration is making duplicate requests simultaneously.",
+  transfers_not_allowed: "The requested transfer cannot be created. Contact us if you are receiving this error.",
+  upstream_order_creation_failed: "The order could not be created. Check the order details and then try again.",
+  url_invalid: "The URL provided is invalid."
+};
+/* harmony default export */ __webpack_exports__["default"] = ({
+  online_payment_error_codes: online_payment_error_codes
+});
 
 /***/ }),
 

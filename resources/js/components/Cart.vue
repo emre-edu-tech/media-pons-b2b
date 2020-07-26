@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-12">
-                <button class="btn btn-danger" @click="emptyCart">Empty Cart</button>
+                <button class="btn btn-danger mb-2" v-if="!noProducts" @click="emptyCart">Empty Cart</button>
                 <div class="empty-cart-notice" v-if="noProducts">
                     <h3 class="text-info">Your shopping cart is empty!</h3>
                     <router-link :to="{ path: '/products' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>

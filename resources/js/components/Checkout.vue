@@ -1,6 +1,15 @@
 <template>
     <div class="container">
-       <div class="row">
+        <div class="row" v-if="isOrderDone">
+            <h3>Your payment has been accepted. Thanks!</h3>
+        </div>
+        <div class="row" v-if="noProducts">
+            <div class="empty-cart-notice">
+                <h3 class="text-info mb-3">Your shopping cart is empty!</h3>
+                <router-link :to="{ path: '/products' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
+            </div>
+        </div>
+       <div class="row" v-if="!noProducts">
             <div class="col-md-4 order-md-2 mb-4">
                 <h4 class="d-flex justify-content-between align-items-center mb-3">
                     <span class="text-muted">Your cart</span>
@@ -54,7 +63,7 @@
             </div>
             <div class="col-md-8 order-md-1">
                 <h4 class="mb-3">Billing address</h4>
-                <form class="needs-validation" id="payment-form">
+                <form class="needs-validation vld-parent" @submit.prevent="handleFormSubmission" ref="formContainer" id="payment-form">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="firstName">First name (*)</label>
@@ -195,7 +204,7 @@
                     </div> -->
 
                     <hr class="mb-4">
-                    <button class="btn btn-primary btn-lg btn-block" id="checkout-btn" @click="handleFormSubmission">Continue to checkout</button>
+                    <button class="btn btn-primary btn-lg btn-block" id="checkout-btn">Continue to checkout</button>
                 </form>
             </div>
         </div>
@@ -203,9 +212,12 @@
 </template>
 
 <script>
-   // Set your publishable key: remember to change this to your live publishable key in production
+    import StripeErrorCodes from '../localization/StripeErrorCodes';
+
+    // Set your publishable key: remember to change this to your live publishable key in production
     // See your keys here: https://dashboard.stripe.com/account/apikeys
-    let stripe = Stripe('pk_test_1FjxJ13xDitXp8rC6EJvzZaE');
+    // Mix variables have been defined in .env file
+    let stripe = Stripe(process.env.MIX_STRIPE_KEY);
     let elements = stripe.elements();
     let card = undefined;
     let stripeStyle = {
@@ -222,6 +234,7 @@
     export default {
         data() {
             return {
+                fullPage: false,
                 cities: [],
                 cartContents: [],
                 subTotal: 0,
@@ -229,6 +242,7 @@
                 total: 0,
                 cartCount: 0,
                 cities: [],
+                isOrderDone: false,
                 buyerDetails: {
                     firstName: '',
                     lastName: '',
@@ -267,9 +281,10 @@
 
             listenForErrors() {
                 card.addEventListener('change', (event) => {
-                    var displayError = document.getElementById('card-errors');
+                    const displayError = document.getElementById('card-errors');
                     if (event.error) {
-                        displayError.textContent = event.error.message;
+                        let errorMessage = StripeErrorCodes.online_payment_error_codes[event.error.code];
+                        displayError.textContent = errorMessage;
                     } else {
                         displayError.textContent = '';
                     }
@@ -279,95 +294,118 @@
             handleFormSubmission() {
                 // disable the checkout button
                 const checkoutBtn = document.getElementById('checkout-btn');
-                
-                var form = document.getElementById('payment-form');
+                const form = document.getElementById('payment-form');
+
+                checkoutBtn.disabled = true;
+
+                let loader = this.$loading.show({
+                    // Optional parameters
+                    container: this.fullPage ? null : this.$refs.formContainer,
+                    canCancel: false,
+                });
 
                 let billingDetails = this.buyerDetails;
                 
-                form.addEventListener('submit', function(ev) {
-                    ev.preventDefault();
-
-                    // get client secret
-                    let clientSecret = null;
-                    axios.get('/get-stripe-client-secret', {
-                        'customerEmail': billingDetails.email,
-                    })
-                    .then((response) => {
-                        checkoutBtn.disabled = true;
-                        clientSecret = response.data.client_secret;
-                        stripe.confirmCardPayment(clientSecret, {
-                            payment_method: {
-                                card: card,
-                                billing_details: {
-                                    name: billingDetails.nameOnCard,
-                                    email: billingDetails.email,
-                                    address: {
-                                        city: billingDetails.selectedCity,
-                                        line1: billingDetails.address1,
-                                        // line2: billingDetails.address2,
-                                        postal_code: billingDetails.postal_code,
-                                        // phone: billingDetails.phone,
-                                    },
+                axios.get('/get-stripe-client-secret', {
+                    'customerEmail': billingDetails.email,
+                })
+                .then((response) => {
+                    let clientSecret = response.data.client_secret;
+                    stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: card,
+                            billing_details: {
+                                name: billingDetails.nameOnCard,
+                                email: billingDetails.email,
+                                address: {
+                                    city: billingDetails.selectedCity,
+                                    line1: billingDetails.address1,
+                                    // line2: billingDetails.address2,
+                                    postal_code: billingDetails.postal_code,
+                                    // phone: billingDetails.phone,
                                 },
-                            }
-                        }).then(function(result) {
-                            if (result.error) {
-                                // Show error to your customer (e.g., insufficient funds)
-                                console.log(result.error.message);
+                            },
+                        }
+                    }).then((result) => {
+                        if (result.error) {
+                            // Show error to your customer (e.g., insufficient funds)
+                            let errorMessage = StripeErrorCodes.online_payment_error_codes[result.error.code];
+                            swal.fire(
+                                'Error!',
+                                errorMessage,
+                                'error',
+                            );
+                        } else {
+                            // The payment has been processed!
+                            if (result.paymentIntent.status === 'succeeded') {
+                                // Empty shopping cart
+                                this.emptyCart();
+
+                                // payment done let the customer know it
+                                this.isOrderDone = true;
+
                                 swal.fire(
-                                    'Error!',
-                                    result.error.message,
-                                    'error',
+                                    'Success!',
+                                    'Your payment has been accepted. Thanks!',
+                                    'success',
                                 );
-                                
-                            } else {
-                                // The payment has been processed!
-                                if (result.paymentIntent.status === 'succeeded') {
-                                    swal.fire(
-                                        'Success!',
-                                        'Your payment has been accepted. Thanks!',
-                                        'success',
-                                    );
-                                    form.reset();
-                                    checkoutBtn.disabled = false;
-                                    // There's a risk of the customer closing the window before callback
-                                    // execution. Set up a webhook or plugin to listen for the
-                                    // payment_intent.succeeded event that handles any business critical
-                                    // post-payment actions.
-                                }
+                                // There's a risk of the customer closing the window before callback
+                                // execution. Set up a webhook or plugin to listen for the
+                                // payment_intent.succeeded event that handles any business critical
+                                // post-payment actions.
                             }
+                            // reset checkout form
                             form.reset();
-                            checkoutBtn.disabled = false;
-                        });
-                    }).catch((response) => {
-                        swal.fire(
-                            'Error!',
-                            response.data.error_message,
-                            'error',
-                        );
+                            // reset stripe elements
+                            card.clear();
+                        }
+                        loader.hide();
+                        checkoutBtn.disabled = false;
                     });
+                }).catch((response) => {
+                    swal.fire(
+                        'Error!',
+                        response.data.error_message,
+                        'error',
+                    );
+                    loader.hide();
+                    checkoutBtn.disabled = false;
+                });
+            },
+
+            emptyCart() {
+                axios.get('/empty-cart')
+                .then(() => {
+                    this.cartContents = [];
+                    this.subTotal = 0;
+                    this.tax = 0;
+                    this.total = 0;
+                    this.cartCount = 0;
                 });
             },
         },
 
-        created() {
-            this.getCities();
-            this.getCartContents();
-        },
-
         mounted() {
+            this.getCartContents();
+            this.getCities();
             // create the card without postal code, mount it on dom element #card-element
             // then attach change event to it.
-            card = elements.create("card", {
-                style: stripeStyle,
-                hidePostalCode: true,
-            });
-            card.mount("#card-element");
-            this.listenForErrors();
+            window.addEventListener('load', () => {
+                if(!this.noProducts) {
+                    card = elements.create("card", {
+                        style: stripeStyle,
+                        hidePostalCode: true,
+                    });
+                    card.mount('#card-element');
+                    this.listenForErrors();
+                }
+            })
+        },
+
+        computed: {
+            noProducts: function() {
+                return this.cartCount === 0;
+            },
         }
     }
 </script>
-
-<style scoped>
-
-</style>

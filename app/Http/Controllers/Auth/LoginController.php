@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -37,4 +38,17 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    // logout function overridden to restore the cart content even after logout
+    public function logout(Request $request)
+    {
+        $data =  session()->get('cart');
+        $this->guard()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerate();
+        session()->put('cart', $data);
+        return $this->loggedOut($request) ?: redirect('/');
+    }
+    
 }
