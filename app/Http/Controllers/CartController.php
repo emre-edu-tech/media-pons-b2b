@@ -8,8 +8,8 @@ use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CartController extends Controller
 {
-    // added for api security
-    // allows only javascript applications with JWT to access api route
+    // added for security
+    // allows only authenticated users to enter here
     public function __construct() {
         $this->middleware('auth');
     }
@@ -50,6 +50,17 @@ class CartController extends Controller
         
         return [
             'success_message' => 'Product has been removed',
+        ];
+    }
+
+    public function updateCartItemQuantity(Request $request, $id) {
+        // Update the cart
+        Cart::update($id, $request->quantity);
+        
+        return [
+            'success' => true,
+            'message' => 'Product quantity updated successfully',
+            'cartContent' => Cart::content(),
         ];
     }
 }

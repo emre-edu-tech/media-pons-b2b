@@ -85,10 +85,6 @@ let routes = [
         component: require('./components/Cart.vue').default
     },
     {
-        path: '/thank-you',
-        component: require('./components/ThankYou.vue').default
-    },
-    {
         path: '/users',
         component: require('./components/Users.vue').default
     },
@@ -141,6 +137,17 @@ Vue.filter('truncatedText', function(text) {
     return text;
 
 })
+
+// Format money for the decimal separator -> , and thousands separator -> .
+Vue.filter('formatMoney', function (number) {
+
+    number = parseInt(number);  // we store numbers as integers so get the integer part
+    number = number/100;    // change money from cents to euro
+    number = number.toFixed(2);   // add fixed decimal points
+    number = number.replace('.', ',');  // change decimal point from . to ,
+    number = number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");  // finally thousands separate with .
+    return number;
+});
 // ##############################
 
 // # For Global Frontend Authentication

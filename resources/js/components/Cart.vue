@@ -14,7 +14,7 @@
                         <router-link :to="{ path: '/products' }" class="btn btn-outline-info btn-sm float-right">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
                         <div class="clearfix"></div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body vld-parent" ref="cartItemContainer">
 
                         <!-- PRODUCT -->
                         <div class="row align-items-center cart-product" v-for="cartContent in cartContents" v-bind:key="cartContent.id">
@@ -23,7 +23,7 @@
                                     <img class="img-fluid" src="/storage/products/flavour-ananas.png" alt="prewiew">
                                 </router-link>
                             </div>
-                            <div class="col-12 text-sm-center col-sm-12 text-md-left col-md-6">
+                            <div class="col-12 text-sm-center col-sm-12 text-md-left col-md-5">
                                 <router-link :to="{ path: `/products/${cartContent.model.id}` }">
                                     <h4 class="product-name"><strong>{{ cartContent.name }}</strong></h4>
                                 </router-link>
@@ -31,18 +31,21 @@
                                     <small>{{ cartContent.model.short_description }}</small>
                                 </h4>
                             </div>
-                            <div class="col-12 col-sm-12 text-sm-center col-md-4 text-md-right row align-items-center">
-                                <div class="col-3 col-sm-3 col-md-6 text-md-right">
+                            <div class="col-12 col-sm-12 text-sm-center col-md-5 row align-items-center">
+                                <div class="col-4 col-sm-3 col-md-3">
                                     <h6><strong>{{ cartContent.model.regular_price }} <span class="text-muted">x</span></strong></h6>
                                 </div>
-                                <div class="col-4 col-sm-4 col-md-4">
+                                <div class="col-3 col-sm-3 col-md-3">
                                     <div class="quantity">
                                         <input type="button" value="+" class="plus">
-                                        <input type="number" step="1" min="50" :value="cartContent.qty" title="Qty" class="qty" size="4">
+                                        <input type="number" step="1" class="qty product-quantity" min="50" @change="changeQuantity" :value="cartContent.qty" title="Qty" size="4" :data-id="cartContent.rowId">
                                         <input type="button" value="-" class="minus">
                                     </div>
                                 </div>
-                                <div class="col-2 col-sm-2 col-md-2 text-right">
+                                <div class="col-3 col-sm-3 col-md-4">
+                                    <h6><strong>{{ cartContent.subtotal | formatMoney }}</strong></h6>
+                                </div>
+                                <div class="col-2 col-sm-2 col-md-2">
                                     <button type="button" @click="removeItem(cartContent.rowId)" class="btn btn-outline-danger btn-xs">
                                         <i class="fa fa-trash" aria-hidden="true"></i>
                                     </button>
@@ -53,9 +56,7 @@
                         <!-- END PRODUCT -->
                         
                         <div class="float-right">
-                            <a href="" class="btn btn-outline-secondary float-right">
-                                Update shopping cart
-                            </a>
+                            <button @click="updateCart" disabled id="update-cart" class="btn btn-outline-secondary float-right">Update shopping cart</button>
                         </div>
                     </div>
                     <div class="card-footer">
@@ -100,6 +101,55 @@
             }
         },
         methods: {
+            updateCart() {
+                const updateButton = document.getElementById('update-cart');
+                const productQuantityInputs = document.querySelectorAll('.product-quantity');
+                let updatedProductCounter = 0;  // to check if all the product updates finished
+
+                let loader = this.$loading.show({
+                    // Optional parameters
+                    container: this.fullPage ? null : this.$refs.cartItemContainer,
+                    canCancel: false,
+                });
+                
+                // check all the product quantity input textboxes
+                // below gives us a nodelist
+                // create array from this node list
+                let inputNumber = productQuantityInputs.length;
+                productQuantityInputs.forEach((element) => {
+                    // data-id is necessary to get the right product to update
+                    const cartProductId = element.getAttribute('data-id');
+                    axios.patch(`/update-cart-item-quantity/${cartProductId}`, {
+                        quantity: element.value,
+                    })
+                    .then((response) => {
+                        updatedProductCounter++;
+                        if(updatedProductCounter == inputNumber) {
+                            this.getCartContents();
+                            toast.fire({
+                                icon: 'success',
+                                title: 'Product quantity updated',
+                            });
+                            loader.hide();
+                            updateButton.disabled = true;
+                        }
+                    }).catch((error) => {
+                        toast.fire({
+                            icon: 'error',
+                            title: 'Server error while updating. Try again!',
+                        });
+                        loader.hide();
+                        updateButton.disabled = true;
+                        return;
+                    });
+                });
+            },
+
+            changeQuantity(event) {
+                const updateButton = document.getElementById('update-cart');
+                updateButton.disabled = false;
+            },
+
             removeItem(cartItemId) {
                 axios.post('/remove-cart-item', {
                     cartItemId: cartItemId,

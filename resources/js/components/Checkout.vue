@@ -1,13 +1,13 @@
 <template>
     <div class="container">
-        <div class="row" v-if="isOrderDone">
-            <h3>Your payment has been accepted. Thanks!</h3>
-        </div>
         <div class="row" v-if="noProducts">
             <div class="empty-cart-notice">
                 <h3 class="text-info mb-3">Your shopping cart is empty!</h3>
                 <router-link :to="{ path: '/products' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
             </div>
+        </div>
+        <div class="row mt-5" v-if="isOrderDone">
+            <h3>Thank you for your order!</h3>
         </div>
        <div class="row" v-if="!noProducts">
             <div class="col-md-4 order-md-2 mb-4">
@@ -62,32 +62,28 @@
                 </form>
             </div>
             <div class="col-md-8 order-md-1">
+                <div v-if="validationErrors" class="bg-red-500 text-white py-2 px-4 pr-0 rounded font-bold mb-4 shadow-lg">
+                    <div v-for="(validationError, index) in validationErrors" v-bind:key="index">
+                        <p class="text-sm">{{ validationError }}</p>
+                    </div>
+                </div>
                 <h4 class="mb-3">Billing address</h4>
                 <form class="needs-validation vld-parent" @submit.prevent="handleFormSubmission" ref="formContainer" id="payment-form">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="firstName">First name (*)</label>
-                            <input type="text" class="form-control" id="firstName" placeholder="" v-model="buyerDetails.firstName" required>
-                            <div class="invalid-feedback">
-                                Valid first name is required.
-                            </div>
+                            <input type="text" class="form-control" name="firstName" id="firstName" placeholder="" v-model="buyerDetails.firstName" required @invalid="validateInput" @change="validateInput">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lastName">Last name (*)</label>
-                            <input type="text" class="form-control" id="lastName" placeholder="" v-model="buyerDetails.lastName" required>
-                            <div class="invalid-feedback">
-                                Valid last name is required.
-                            </div>
+                            <input type="text" class="form-control" id="lastName" placeholder="" v-model="buyerDetails.lastName" required @invalid="validateInput" @change="validateInput">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="email">Email (*)</label>
-                            <input type="email" class="form-control" id="email" placeholder="you@example.com" required v-model="buyerDetails.email">
-                            <div class="invalid-feedback">
-                                Please enter a valid email address for shipping updates.
-                            </div>
+                            <input type="email" class="form-control" id="email" placeholder="you@example.com" required v-model="buyerDetails.email" @invalid="validateInput" @change="validateInput">
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -98,10 +94,7 @@
 
                     <div class="mb-3">
                         <label for="address">Address (*)</label>
-                        <input type="text" class="form-control" id="address" placeholder="1234 Main St" required v-model="buyerDetails.address1">
-                        <div class="invalid-feedback">
-                            Please enter your shipping address.
-                        </div>
+                        <input type="text" class="form-control" id="address" placeholder="1234 Main St" required @invalid="validateInput" @change="validateInput" v-model="buyerDetails.address1">
                     </div>
 
                     <div class="mb-3">
@@ -113,20 +106,14 @@
                         
                         <div class="col-md-6 mb-3">
                             <label for="city">City (*)</label>
-                            <select class="custom-select d-block w-100" id="city" name="city" required v-model="buyerDetails.selectedCity">
+                            <select class="custom-select d-block w-100" id="city" name="city" required @invalid="validateInput" @change="validateInput" v-model="buyerDetails.selectedCity">
                                 <option value="">Stadt wählen</option>
                                 <option v-for="city in cities" :value="city.name" v-bind:key="city.id">{{ city.name }}</option>
                             </select>
-                            <div class="invalid-feedback">
-                                Please provide a valid city.
-                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="zip">Zip (*)</label>
-                            <input type="text" class="form-control" id="zip" name="zip" placeholder="" v-model="buyerDetails.zipcode" required>
-                            <div class="invalid-feedback">
-                                Zip code required.
-                            </div>
+                            <label for="zipcode">Zipcode (*)</label>
+                            <input type="text" class="form-control" id="zipcode" name="zipcode" placeholder="" v-model="buyerDetails.zipcode" required @invalid="validateInput" @change="validateInput">
                         </div>
 
                     </div>
@@ -156,11 +143,8 @@
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label for="name-on-card">Name on card (*)</label>
-                            <input type="text" class="form-control" id="name-on-card" placeholder="" v-model="buyerDetails.nameOnCard" required>
+                            <input type="text" class="form-control" id="name-on-card" placeholder="" v-model="buyerDetails.nameOnCard" required @invalid="validateInput" @change="validateInput">
                             <small class="text-muted">Full name as displayed on card</small>
-                            <div class="invalid-feedback">
-                                Name on card is required
-                            </div>
                         </div>
                     </div>
                     <!-- Stripe -->
@@ -204,7 +188,7 @@
                     </div> -->
 
                     <hr class="mb-4">
-                    <button class="btn btn-primary btn-lg btn-block" id="checkout-btn">Continue to checkout</button>
+                    <button class="btn btn-primary btn-lg btn-block" id="checkout-btn">Checkout!</button>
                 </form>
             </div>
         </div>
@@ -243,6 +227,7 @@
                 cartCount: 0,
                 cities: [],
                 isOrderDone: false,
+                validationErrors: null,
                 buyerDetails: {
                     firstName: '',
                     lastName: '',
@@ -257,6 +242,16 @@
             }
         },
         methods: {
+            validateInput(event) {
+                if(event.target.value === '') {
+                    event.target.setCustomValidity('Das Feld ist erforderlich');
+                }
+                else if(event.target.validity.typeMismatch) {
+                    event.target.setCustomValidity('Bitte geben Sie eine gültige E-Mail');
+                } else {
+                    event.target.setCustomValidity('');
+                }
+            },
             getCities() {
                 axios.get('/api/cities')
                 .then((response) => {
@@ -306,8 +301,16 @@
 
                 let billingDetails = this.buyerDetails;
                 
-                axios.get('/get-stripe-client-secret', {
-                    'customerEmail': billingDetails.email,
+                axios.post('/get-stripe-client-secret', {
+                    firstName: billingDetails.firstName,
+                    lastName: billingDetails.lastName,
+                    customerEmail: billingDetails.email,
+                    phone: billingDetails.phone,
+                    address1: billingDetails.address1,
+                    address2: billingDetails.address2,
+                    selectedCity: billingDetails.selectedCity,
+                    zipcode: billingDetails.zipcode,
+                    nameOnCard: billingDetails.nameOnCard,
                 })
                 .then((response) => {
                     let clientSecret = response.data.client_secret;
@@ -321,7 +324,7 @@
                                     city: billingDetails.selectedCity,
                                     line1: billingDetails.address1,
                                     // line2: billingDetails.address2,
-                                    postal_code: billingDetails.postal_code,
+                                    postal_code: billingDetails.zipcode,
                                     // phone: billingDetails.phone,
                                 },
                             },
@@ -329,6 +332,8 @@
                     }).then((result) => {
                         if (result.error) {
                             // Show error to your customer (e.g., insufficient funds)
+                            // These are the error messages after client secret has been created on the server but 
+                            // something invalid going on with the transaction
                             let errorMessage = StripeErrorCodes.online_payment_error_codes[result.error.code];
                             swal.fire(
                                 'Error!',
@@ -341,7 +346,7 @@
                                 // Empty shopping cart
                                 this.emptyCart();
 
-                                // payment done let the customer know it
+                                // payment done. Let the customer know it
                                 this.isOrderDone = true;
 
                                 swal.fire(
@@ -353,6 +358,7 @@
                                 // execution. Set up a webhook or plugin to listen for the
                                 // payment_intent.succeeded event that handles any business critical
                                 // post-payment actions.
+                                // Order can be store to the database here using api calls
                             }
                             // reset checkout form
                             form.reset();
@@ -363,6 +369,13 @@
                         checkoutBtn.disabled = false;
                     });
                 }).catch((response) => {
+                    // This response can have server side validation error messages
+                    // so called Errorbag
+                    if(response.data.errors) {
+                        this.validationErrors = response.data.errors;
+                    }
+                    // Exception error messages that come from PaymentIntent::create() function in backend
+                    // These are the errors that fire when creating the client secret
                     swal.fire(
                         'Error!',
                         response.data.error_message,

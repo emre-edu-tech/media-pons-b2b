@@ -2197,6 +2197,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2207,13 +2208,62 @@ __webpack_require__.r(__webpack_exports__);
     };
   },
   methods: {
-    removeItem: function removeItem(cartItemId) {
+    updateCart: function updateCart() {
       var _this = this;
+
+      var updateButton = document.getElementById('update-cart');
+      var productQuantityInputs = document.querySelectorAll('.product-quantity');
+      var updatedProductCounter = 0; // to check if all the product updates finished
+
+      var loader = this.$loading.show({
+        // Optional parameters
+        container: this.fullPage ? null : this.$refs.cartItemContainer,
+        canCancel: false
+      }); // check all the product quantity input textboxes
+      // below gives us a nodelist
+      // create array from this node list
+
+      var inputNumber = productQuantityInputs.length;
+      productQuantityInputs.forEach(function (element) {
+        // data-id is necessary to get the right product to update
+        var cartProductId = element.getAttribute('data-id');
+        axios.patch("/update-cart-item-quantity/".concat(cartProductId), {
+          quantity: element.value
+        }).then(function (response) {
+          updatedProductCounter++;
+
+          if (updatedProductCounter == inputNumber) {
+            _this.getCartContents();
+
+            toast.fire({
+              icon: 'success',
+              title: 'Product quantity updated'
+            });
+            loader.hide();
+            updateButton.disabled = true;
+          }
+        })["catch"](function (error) {
+          toast.fire({
+            icon: 'error',
+            title: 'Server error while updating. Try again!'
+          });
+          loader.hide();
+          updateButton.disabled = true;
+          return;
+        });
+      });
+    },
+    changeQuantity: function changeQuantity(event) {
+      var updateButton = document.getElementById('update-cart');
+      updateButton.disabled = false;
+    },
+    removeItem: function removeItem(cartItemId) {
+      var _this2 = this;
 
       axios.post('/remove-cart-item', {
         cartItemId: cartItemId
       }).then(function (response) {
-        _this.getCartContents();
+        _this2.getCartContents();
 
         toast.fire({
           icon: 'success',
@@ -2224,21 +2274,21 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     emptyCart: function emptyCart() {
-      var _this2 = this;
+      var _this3 = this;
 
       axios.get('/empty-cart').then(function () {
-        _this2.cartContents = [];
+        _this3.cartContents = [];
         swal.fire('Success!', 'Cart is empty now', 'success');
       });
     },
     getCartContents: function getCartContents() {
-      var _this3 = this;
+      var _this4 = this;
 
       axios.get('/check-cart-status').then(function (response) {
-        _this3.cartContents = response.data.cartContent;
-        _this3.subTotal = response.data.subTotal;
-        _this3.tax = response.data.tax;
-        _this3.total = response.data.total;
+        _this4.cartContents = response.data.cartContent;
+        _this4.subTotal = response.data.subTotal;
+        _this4.tax = response.data.tax;
+        _this4.total = response.data.total;
       })["catch"](function (error) {
         console.log(error);
       });
@@ -2575,22 +2625,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
  // Set your publishable key: remember to change this to your live publishable key in production
 // See your keys here: https://dashboard.stripe.com/account/apikeys
 // Mix variables have been defined in .env file
@@ -2617,7 +2651,7 @@ var stripeStyle = {
       tax: 0,
       total: 0,
       cartCount: 0
-    }, _defineProperty(_ref, "cities", []), _defineProperty(_ref, "isOrderDone", false), _defineProperty(_ref, "buyerDetails", {
+    }, _defineProperty(_ref, "cities", []), _defineProperty(_ref, "isOrderDone", false), _defineProperty(_ref, "validationErrors", null), _defineProperty(_ref, "buyerDetails", {
       firstName: '',
       lastName: '',
       email: '',
@@ -2630,6 +2664,15 @@ var stripeStyle = {
     }), _ref;
   },
   methods: {
+    validateInput: function validateInput(event) {
+      if (event.target.value === '') {
+        event.target.setCustomValidity('Das Feld ist erforderlich');
+      } else if (event.target.validity.typeMismatch) {
+        event.target.setCustomValidity('Bitte geben Sie eine gültige E-Mail');
+      } else {
+        event.target.setCustomValidity('');
+      }
+    },
     getCities: function getCities() {
       var _this = this;
 
@@ -2677,8 +2720,16 @@ var stripeStyle = {
         canCancel: false
       });
       var billingDetails = this.buyerDetails;
-      axios.get('/get-stripe-client-secret', {
-        'customerEmail': billingDetails.email
+      axios.post('/get-stripe-client-secret', {
+        firstName: billingDetails.firstName,
+        lastName: billingDetails.lastName,
+        customerEmail: billingDetails.email,
+        phone: billingDetails.phone,
+        address1: billingDetails.address1,
+        address2: billingDetails.address2,
+        selectedCity: billingDetails.selectedCity,
+        zipcode: billingDetails.zipcode,
+        nameOnCard: billingDetails.nameOnCard
       }).then(function (response) {
         var clientSecret = response.data.client_secret;
         stripe.confirmCardPayment(clientSecret, {
@@ -2691,7 +2742,7 @@ var stripeStyle = {
                 city: billingDetails.selectedCity,
                 line1: billingDetails.address1,
                 // line2: billingDetails.address2,
-                postal_code: billingDetails.postal_code // phone: billingDetails.phone,
+                postal_code: billingDetails.zipcode // phone: billingDetails.phone,
 
               }
             }
@@ -2699,13 +2750,15 @@ var stripeStyle = {
         }).then(function (result) {
           if (result.error) {
             // Show error to your customer (e.g., insufficient funds)
+            // These are the error messages after client secret has been created on the server but 
+            // something invalid going on with the transaction
             var errorMessage = _localization_StripeErrorCodes__WEBPACK_IMPORTED_MODULE_0__["default"].online_payment_error_codes[result.error.code];
             swal.fire('Error!', errorMessage, 'error');
           } else {
             // The payment has been processed!
             if (result.paymentIntent.status === 'succeeded') {
               // Empty shopping cart
-              _this3.emptyCart(); // payment done let the customer know it
+              _this3.emptyCart(); // payment done. Let the customer know it
 
 
               _this3.isOrderDone = true;
@@ -2713,6 +2766,7 @@ var stripeStyle = {
               // execution. Set up a webhook or plugin to listen for the
               // payment_intent.succeeded event that handles any business critical
               // post-payment actions.
+              // Order can be store to the database here using api calls
             } // reset checkout form
 
 
@@ -2725,6 +2779,14 @@ var stripeStyle = {
           checkoutBtn.disabled = false;
         });
       })["catch"](function (response) {
+        // This response can have server side validation error messages
+        // so called Errorbag
+        if (response.data.errors) {
+          _this3.validationErrors = response.data.errors;
+        } // Exception error messages that come from PaymentIntent::create() function in backend
+        // These are the errors that fire when creating the client secret
+
+
         swal.fire('Error!', response.data.error_message, 'error');
         loader.hide();
         checkoutBtn.disabled = false;
@@ -3581,41 +3643,6 @@ __webpack_require__.r(__webpack_exports__);
     noProduct: function noProduct() {
       return this.cartCount <= 0;
     }
-  }
-});
-
-/***/ }),
-
-/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ThankYou.vue?vue&type=script&lang=js&":
-/*!*******************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ThankYou.vue?vue&type=script&lang=js& ***!
-  \*******************************************************************************************************************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-/* harmony default export */ __webpack_exports__["default"] = ({
-  mounted: function mounted() {
-    console.log('Component mounted.');
   }
 });
 
@@ -72294,7 +72321,10 @@ var render = function() {
               _vm._v(" "),
               _c(
                 "div",
-                { staticClass: "card-body" },
+                {
+                  ref: "cartItemContainer",
+                  staticClass: "card-body vld-parent"
+                },
                 [
                   _vm._l(_vm.cartContents, function(cartContent) {
                     return _c(
@@ -72337,7 +72367,7 @@ var render = function() {
                           "div",
                           {
                             staticClass:
-                              "col-12 text-sm-center col-sm-12 text-md-left col-md-6"
+                              "col-12 text-sm-center col-sm-12 text-md-left col-md-5"
                           },
                           [
                             _c(
@@ -72373,15 +72403,12 @@ var render = function() {
                           "div",
                           {
                             staticClass:
-                              "col-12 col-sm-12 text-sm-center col-md-4 text-md-right row align-items-center"
+                              "col-12 col-sm-12 text-sm-center col-md-5 row align-items-center"
                           },
                           [
                             _c(
                               "div",
-                              {
-                                staticClass:
-                                  "col-3 col-sm-3 col-md-6 text-md-right"
-                              },
+                              { staticClass: "col-4 col-sm-3 col-md-3" },
                               [
                                 _c("h6", [
                                   _c("strong", [
@@ -72399,7 +72426,7 @@ var render = function() {
                             _vm._v(" "),
                             _c(
                               "div",
-                              { staticClass: "col-4 col-sm-4 col-md-4" },
+                              { staticClass: "col-3 col-sm-3 col-md-3" },
                               [
                                 _c("div", { staticClass: "quantity" }, [
                                   _c("input", {
@@ -72408,15 +72435,17 @@ var render = function() {
                                   }),
                                   _vm._v(" "),
                                   _c("input", {
-                                    staticClass: "qty",
+                                    staticClass: "qty product-quantity",
                                     attrs: {
                                       type: "number",
                                       step: "1",
                                       min: "50",
                                       title: "Qty",
-                                      size: "4"
+                                      size: "4",
+                                      "data-id": cartContent.rowId
                                     },
-                                    domProps: { value: cartContent.qty }
+                                    domProps: { value: cartContent.qty },
+                                    on: { change: _vm.changeQuantity }
                                   }),
                                   _vm._v(" "),
                                   _c("input", {
@@ -72429,10 +72458,25 @@ var render = function() {
                             _vm._v(" "),
                             _c(
                               "div",
-                              {
-                                staticClass:
-                                  "col-2 col-sm-2 col-md-2 text-right"
-                              },
+                              { staticClass: "col-3 col-sm-3 col-md-4" },
+                              [
+                                _c("h6", [
+                                  _c("strong", [
+                                    _vm._v(
+                                      _vm._s(
+                                        _vm._f("formatMoney")(
+                                          cartContent.subtotal
+                                        )
+                                      )
+                                    )
+                                  ])
+                                ])
+                              ]
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "div",
+                              { staticClass: "col-2 col-sm-2 col-md-2" },
                               [
                                 _c(
                                   "button",
@@ -72463,13 +72507,23 @@ var render = function() {
                   _vm._v(" "),
                   _c("hr"),
                   _vm._v(" "),
-                  _vm._m(0)
+                  _c("div", { staticClass: "float-right" }, [
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-outline-secondary float-right",
+                        attrs: { disabled: "", id: "update-cart" },
+                        on: { click: _vm.updateCart }
+                      },
+                      [_vm._v("Update shopping cart")]
+                    )
+                  ])
                 ],
                 2
               ),
               _vm._v(" "),
               _c("div", { staticClass: "card-footer" }, [
-                _vm._m(1),
+                _vm._m(0),
                 _vm._v(" "),
                 _c(
                   "div",
@@ -72519,25 +72573,6 @@ var render = function() {
   ])
 }
 var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "float-right" }, [
-      _c(
-        "a",
-        {
-          staticClass: "btn btn-outline-secondary float-right",
-          attrs: { href: "" }
-        },
-        [
-          _vm._v(
-            "\n                            Update shopping cart\n                        "
-          )
-        ]
-      )
-    ])
-  },
   function() {
     var _vm = this
     var _h = _vm.$createElement
@@ -72639,12 +72674,6 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "container" }, [
-    _vm.isOrderDone
-      ? _c("div", { staticClass: "row" }, [
-          _c("h3", [_vm._v("Your payment has been accepted. Thanks!")])
-        ])
-      : _vm._e(),
-    _vm._v(" "),
     _vm.noProducts
       ? _c("div", { staticClass: "row" }, [
           _c(
@@ -72671,6 +72700,12 @@ var render = function() {
             ],
             1
           )
+        ])
+      : _vm._e(),
+    _vm._v(" "),
+    _vm.isOrderDone
+      ? _c("div", { staticClass: "row mt-5" }, [
+          _c("h3", [_vm._v("Thank you for your order!")])
         ])
       : _vm._e(),
     _vm._v(" "),
@@ -72816,6 +72851,27 @@ var render = function() {
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "col-md-8 order-md-1" }, [
+            _vm.validationErrors
+              ? _c(
+                  "div",
+                  {
+                    staticClass:
+                      "bg-red-500 text-white py-2 px-4 pr-0 rounded font-bold mb-4 shadow-lg"
+                  },
+                  _vm._l(_vm.validationErrors, function(
+                    validationError,
+                    index
+                  ) {
+                    return _c("div", { key: index }, [
+                      _c("p", { staticClass: "text-sm" }, [
+                        _vm._v(_vm._s(validationError))
+                      ])
+                    ])
+                  }),
+                  0
+                )
+              : _vm._e(),
+            _vm._v(" "),
             _c("h4", { staticClass: "mb-3" }, [_vm._v("Billing address")]),
             _vm._v(" "),
             _c(
@@ -72850,12 +72906,15 @@ var render = function() {
                       staticClass: "form-control",
                       attrs: {
                         type: "text",
+                        name: "firstName",
                         id: "firstName",
                         placeholder: "",
                         required: ""
                       },
                       domProps: { value: _vm.buyerDetails.firstName },
                       on: {
+                        invalid: _vm.validateInput,
+                        change: _vm.validateInput,
                         input: function($event) {
                           if ($event.target.composing) {
                             return
@@ -72867,13 +72926,7 @@ var render = function() {
                           )
                         }
                       }
-                    }),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Valid first name is required.\n                        "
-                      )
-                    ])
+                    })
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "col-md-6 mb-3" }, [
@@ -72899,6 +72952,8 @@ var render = function() {
                       },
                       domProps: { value: _vm.buyerDetails.lastName },
                       on: {
+                        invalid: _vm.validateInput,
+                        change: _vm.validateInput,
                         input: function($event) {
                           if ($event.target.composing) {
                             return
@@ -72910,13 +72965,7 @@ var render = function() {
                           )
                         }
                       }
-                    }),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Valid last name is required.\n                        "
-                      )
-                    ])
+                    })
                   ])
                 ]),
                 _vm._v(" "),
@@ -72944,6 +72993,8 @@ var render = function() {
                       },
                       domProps: { value: _vm.buyerDetails.email },
                       on: {
+                        invalid: _vm.validateInput,
+                        change: _vm.validateInput,
                         input: function($event) {
                           if ($event.target.composing) {
                             return
@@ -72955,13 +73006,7 @@ var render = function() {
                           )
                         }
                       }
-                    }),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Please enter a valid email address for shipping updates.\n                        "
-                      )
-                    ])
+                    })
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "col-md-6 mb-3" }, [
@@ -73024,6 +73069,8 @@ var render = function() {
                     },
                     domProps: { value: _vm.buyerDetails.address1 },
                     on: {
+                      invalid: _vm.validateInput,
+                      change: _vm.validateInput,
                       input: function($event) {
                         if ($event.target.composing) {
                           return
@@ -73035,13 +73082,7 @@ var render = function() {
                         )
                       }
                     }
-                  }),
-                  _vm._v(" "),
-                  _c("div", { staticClass: "invalid-feedback" }, [
-                    _vm._v(
-                      "\n                        Please enter your shipping address.\n                    "
-                    )
-                  ])
+                  })
                 ]),
                 _vm._v(" "),
                 _c("div", { staticClass: "mb-3" }, [
@@ -73100,23 +73141,27 @@ var render = function() {
                         staticClass: "custom-select d-block w-100",
                         attrs: { id: "city", name: "city", required: "" },
                         on: {
-                          change: function($event) {
-                            var $$selectedVal = Array.prototype.filter
-                              .call($event.target.options, function(o) {
-                                return o.selected
-                              })
-                              .map(function(o) {
-                                var val = "_value" in o ? o._value : o.value
-                                return val
-                              })
-                            _vm.$set(
-                              _vm.buyerDetails,
-                              "selectedCity",
-                              $event.target.multiple
-                                ? $$selectedVal
-                                : $$selectedVal[0]
-                            )
-                          }
+                          invalid: _vm.validateInput,
+                          change: [
+                            function($event) {
+                              var $$selectedVal = Array.prototype.filter
+                                .call($event.target.options, function(o) {
+                                  return o.selected
+                                })
+                                .map(function(o) {
+                                  var val = "_value" in o ? o._value : o.value
+                                  return val
+                                })
+                              _vm.$set(
+                                _vm.buyerDetails,
+                                "selectedCity",
+                                $event.target.multiple
+                                  ? $$selectedVal
+                                  : $$selectedVal[0]
+                              )
+                            },
+                            _vm.validateInput
+                          ]
                         }
                       },
                       [
@@ -73133,17 +73178,13 @@ var render = function() {
                         })
                       ],
                       2
-                    ),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Please provide a valid city.\n                        "
-                      )
-                    ])
+                    )
                   ]),
                   _vm._v(" "),
                   _c("div", { staticClass: "col-md-6 mb-3" }, [
-                    _c("label", { attrs: { for: "zip" } }, [_vm._v("Zip (*)")]),
+                    _c("label", { attrs: { for: "zipcode" } }, [
+                      _vm._v("Zipcode (*)")
+                    ]),
                     _vm._v(" "),
                     _c("input", {
                       directives: [
@@ -73157,13 +73198,15 @@ var render = function() {
                       staticClass: "form-control",
                       attrs: {
                         type: "text",
-                        id: "zip",
-                        name: "zip",
+                        id: "zipcode",
+                        name: "zipcode",
                         placeholder: "",
                         required: ""
                       },
                       domProps: { value: _vm.buyerDetails.zipcode },
                       on: {
+                        invalid: _vm.validateInput,
+                        change: _vm.validateInput,
                         input: function($event) {
                           if ($event.target.composing) {
                             return
@@ -73175,13 +73218,7 @@ var render = function() {
                           )
                         }
                       }
-                    }),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Zip code required.\n                        "
-                      )
-                    ])
+                    })
                   ])
                 ]),
                 _vm._v(" "),
@@ -73215,6 +73252,8 @@ var render = function() {
                       },
                       domProps: { value: _vm.buyerDetails.nameOnCard },
                       on: {
+                        invalid: _vm.validateInput,
+                        change: _vm.validateInput,
                         input: function($event) {
                           if ($event.target.composing) {
                             return
@@ -73230,12 +73269,6 @@ var render = function() {
                     _vm._v(" "),
                     _c("small", { staticClass: "text-muted" }, [
                       _vm._v("Full name as displayed on card")
-                    ]),
-                    _vm._v(" "),
-                    _c("div", { staticClass: "invalid-feedback" }, [
-                      _vm._v(
-                        "\n                            Name on card is required\n                        "
-                      )
                     ])
                   ])
                 ]),
@@ -73250,7 +73283,7 @@ var render = function() {
                     staticClass: "btn btn-primary btn-lg btn-block",
                     attrs: { id: "checkout-btn" }
                   },
-                  [_vm._v("Continue to checkout")]
+                  [_vm._v("Checkout!")]
                 )
               ]
             )
@@ -75371,59 +75404,6 @@ var render = function() {
   ])
 }
 var staticRenderFns = []
-render._withStripped = true
-
-
-
-/***/ }),
-
-/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ThankYou.vue?vue&type=template&id=28059080&":
-/*!***********************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ThankYou.vue?vue&type=template&id=28059080& ***!
-  \***********************************************************************************************************************************************************************************************************/
-/*! exports provided: render, staticRenderFns */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _vm._m(0)
-}
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "container" }, [
-      _c("div", { staticClass: "row justify-content-center" }, [
-        _c("div", { staticClass: "col-md-8" }, [
-          _c("div", { staticClass: "card" }, [
-            _c("div", { staticClass: "card-header" }, [
-              _vm._v("Example Component")
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "card-body" }, [
-              _c("h3", [_vm._v("Thanks for your order!")]),
-              _vm._v(" "),
-              _c("p", [_vm._v("A confirmation e-mail was sent")]),
-              _vm._v(" "),
-              _c(
-                "a",
-                { staticClass: "btn btn-outline-dark", attrs: { href: "/" } },
-                [_vm._v("Homepage")]
-              )
-            ])
-          ])
-        ])
-      ])
-    ])
-  }
-]
 render._withStripped = true
 
 
@@ -91547,9 +91527,6 @@ var routes = [{
   path: '/cart',
   component: __webpack_require__(/*! ./components/Cart.vue */ "./resources/js/components/Cart.vue")["default"]
 }, {
-  path: '/thank-you',
-  component: __webpack_require__(/*! ./components/ThankYou.vue */ "./resources/js/components/ThankYou.vue")["default"]
-}, {
   path: '/users',
   component: __webpack_require__(/*! ./components/Users.vue */ "./resources/js/components/Users.vue")["default"]
 }, {
@@ -91590,6 +91567,20 @@ Vue.filter('truncatedText', function (text) {
   }
 
   return text;
+}); // Format money for the decimal separator -> , and thousands separator -> .
+
+Vue.filter('formatMoney', function (number) {
+  number = parseInt(number); // we store numbers as integers so get the integer part
+
+  number = number / 100; // change money from cents to euro
+
+  number = number.toFixed(2); // add fixed decimal points
+
+  number = number.replace('.', ','); // change decimal point from . to ,
+
+  number = number.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // finally thousands separate with .
+
+  return number;
 }); // ##############################
 // # For Global Frontend Authentication
 
@@ -92720,75 +92711,6 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/ThankYou.vue":
-/*!**********************************************!*\
-  !*** ./resources/js/components/ThankYou.vue ***!
-  \**********************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ThankYou.vue?vue&type=template&id=28059080& */ "./resources/js/components/ThankYou.vue?vue&type=template&id=28059080&");
-/* harmony import */ var _ThankYou_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ThankYou.vue?vue&type=script&lang=js& */ "./resources/js/components/ThankYou.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
-
-
-
-
-
-/* normalize component */
-
-var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
-  _ThankYou_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
-  _ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__["render"],
-  _ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
-  false,
-  null,
-  null,
-  null
-  
-)
-
-/* hot reload */
-if (false) { var api; }
-component.options.__file = "resources/js/components/ThankYou.vue"
-/* harmony default export */ __webpack_exports__["default"] = (component.exports);
-
-/***/ }),
-
-/***/ "./resources/js/components/ThankYou.vue?vue&type=script&lang=js&":
-/*!***********************************************************************!*\
-  !*** ./resources/js/components/ThankYou.vue?vue&type=script&lang=js& ***!
-  \***********************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ThankYou_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./ThankYou.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ThankYou.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_ThankYou_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
-
-/***/ }),
-
-/***/ "./resources/js/components/ThankYou.vue?vue&type=template&id=28059080&":
-/*!*****************************************************************************!*\
-  !*** ./resources/js/components/ThankYou.vue?vue&type=template&id=28059080& ***!
-  \*****************************************************************************/
-/*! exports provided: render, staticRenderFns */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./ThankYou.vue?vue&type=template&id=28059080& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ThankYou.vue?vue&type=template&id=28059080&");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__["render"]; });
-
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ThankYou_vue_vue_type_template_id_28059080___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
-
-
-
-/***/ }),
-
 /***/ "./resources/js/components/Users.vue":
 /*!*******************************************!*\
   !*** ./resources/js/components/Users.vue ***!
@@ -92891,7 +92813,7 @@ var online_payment_error_codes = {
   coupon_expired: "The coupon provided for a subscription or order has expired. Either create a new coupon, or use an existing one that is valid.",
   customer_max_subscriptions: "The maximum number of subscriptions for a customer has been reached. Contact us if you are receiving this error.",
   email_invalid: "The email address is invalid (e.g., not properly formatted). Check that the email address is properly formatted and only includes allowed characters.",
-  expired_card: "The card has expired. Check the expiration date or use a different card.",
+  expired_card: "Die Karte ist abgelaufen. Überprüfen Sie das Ablaufdatum oder verwenden Sie eine andere Karte.",
   idempotency_key_in_use: "The idempotency key provided is currently being used in another request. This occurs if your integration is making duplicate requests simultaneously.",
   incomplete_number: "Ihre Kartennummer ist unvollständig.",
   incomplete_expiry: "Das Ablaufdatum Ihrer Karte ist unvollständig.",

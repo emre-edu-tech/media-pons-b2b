@@ -27,9 +27,10 @@ Route::get('/empty-cart', function() {
 Route::get('/check-cart-status', 'CartController@checkIfCartEmpty');
 Route::get('/get-cart-count', 'CartController@getCartCount');
 Route::post('/remove-cart-item', 'CartController@removeCartItem');
+Route::patch('/update-cart-item-quantity/{cartId}', 'CartController@updateCartItemQuantity');
 
 // Checkout Controller Custom Routes
-Route::get('/get-stripe-client-secret', 'CheckoutController@store');
+Route::post('/get-stripe-client-secret', 'CheckoutController@store');
 
 // Web Authentication controllers
 Auth::routes([

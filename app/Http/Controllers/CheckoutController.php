@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Illuminate\Http\Request;
+use App\Http\Requests\CheckoutRequest;
 use Gloudemans\Shoppingcart\Facades\Cart;
 
 class CheckoutController extends Controller
 {
+    // added for security
+    // allows only authenticated users to enter here
+    public function __construct() {
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -35,11 +43,18 @@ class CheckoutController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CheckoutRequest $request)
     {
-        // do serverside validation
+        // Serverside validation done using Checkout Request
+        // Now you have all the user information to store the database
+        // or pass the order information to Stripe dashboard like we did below
+        // with the $contents variable
 
-        // get stripe info
+        // make the cart contents available as string format
+        $contents = Cart::content()->map(function($item) {
+            return $item->model->id.', '.$item->model->name.', '.$item->qty;
+        })->values()->toJson();
+
         try {
             // Set your secret key. Remember to switch to your live secret key in production!
             // See your keys here: https://dashboard.stripe.com/account/apikeys
@@ -47,12 +62,15 @@ class CheckoutController extends Controller
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
             $intent = PaymentIntent::create([
-                'amount' => Cart::total(),
+                'amount' => Cart::total(),  // here we send Stripe total money as cents
                 'currency' => 'EUR',
                 'description'   => 'Order',
                 'receipt_email' => $request->customerEmail,
                 // Verify your integration in this guide by including this parameter
-                'metadata' => ['integration_check' => 'accept_a_payment'],
+                'metadata' => [
+                    'contents' => $contents,
+                    'total_quantity' => Cart::count(),
+                ],
             ]);
 
             // Transaction successful save order information to database

@@ -22,7 +22,7 @@ const online_payment_error_codes = {
     coupon_expired: "The coupon provided for a subscription or order has expired. Either create a new coupon, or use an existing one that is valid.",
     customer_max_subscriptions: "The maximum number of subscriptions for a customer has been reached. Contact us if you are receiving this error.",
     email_invalid: "The email address is invalid (e.g., not properly formatted). Check that the email address is properly formatted and only includes allowed characters.",
-    expired_card: "The card has expired. Check the expiration date or use a different card.",
+    expired_card: "Die Karte ist abgelaufen. Überprüfen Sie das Ablaufdatum oder verwenden Sie eine andere Karte.",
     idempotency_key_in_use: "The idempotency key provided is currently being used in another request. This occurs if your integration is making duplicate requests simultaneously.",
     incomplete_number: "Ihre Kartennummer ist unvollständig.",
     incomplete_expiry: "Das Ablaufdatum Ihrer Karte ist unvollständig.",
