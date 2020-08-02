@@ -14,6 +14,6 @@ class UsersTableSeeder extends Seeder
         Eloquent::unguard();
         $path = 'database/Developer_docs/add_users.sql';
         DB::unprepared(file_get_contents($path));
-        $this->command->info('Cities table seeded!');
+        $this->command->info('Users table seeded!');
     }
 }
