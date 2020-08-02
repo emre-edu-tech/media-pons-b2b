@@ -1,0 +1,3 @@
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'Media Pons', 'support@media-pons.de', NULL, '$2y$10$S/ji.HfT2n74nLR1y2FxdOI.HHlJpr24k6K0sscVpJFW3u54LIkbC', NULL, '2020-07-18 03:08:12', '2020-07-18 03:08:12');
+(2, 'MP Admin', 'developer@media-pons.de', NULL, '$2y$10$S/ji.HfT2n74nLR1y2FxdOI.HHlJpr24k6K0sscVpJFW3u54LIkbC', NULL, '2020-07-18 03:08:12', '2020-07-18 03:08:12');

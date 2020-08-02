@@ -2,12 +2,12 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <router-link :to="{ path: '/products' }" class="btn btn-success"><i class="fas fa-arrow-circle-left fa-fw mr-2"></i> Zurück</router-link>
+                <router-link :to="{ path: '/categories' }" class="btn btn-success"><i class="fas fa-arrow-circle-left fa-fw mr-2"></i> Zurück</router-link>
             </div>
         </div>
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <img class="img-fluid" src="/storage/products/flavour-ananas.png" :alt="product.name">
+                <img class="img-fluid w-50" src="/storage/products/flavour-ananas.png" :alt="product.name">
                 <h3 class="title">{{product.name}}</h3>
                 <h4 class="text-red">€ {{ product.regular_price }}</h4>
                 <p class="text-muted">{{product.short_description}}</p>
@@ -63,7 +63,7 @@
             },
 
             getProduct() {
-                let url = `/api/products/${this.$route.params.id}`;
+                let url = `/api/products/${this.$route.params.slug}`;
                 axios.get(url)
                 .then((response) => {
                     this.product = response.data;

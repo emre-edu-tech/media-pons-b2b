@@ -17286,6 +17286,14 @@ main {
   margin-top: 20px;
 }
 
+.category_block li:hover {
+  background-color: #007bff;
+}
+
+.category_block li:hover a {
+  color: #ffffff;
+}
+
 .product-price {
   color: red;
   font-size: 1.2rem;

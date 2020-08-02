@@ -52,6 +52,10 @@ window.objectToFormData = objectToFormData;
 window.FireEvent = new Vue();
 // ########
 
+// # Laravel Vue Pagination Component
+Vue.component('pagination', require('laravel-vue-pagination'));
+// ########
+
 // # Vue router related code
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
@@ -65,11 +69,15 @@ let routes = [
         component: require('./components/Dealers.vue').default
     },
     {
-        path: '/products',
+        path: '/categories',
         component: require('./components/Products.vue').default
     },
     {
-        path: '/products/:id',
+        path: '/categories/:slug',
+        component: require('./components/Products.vue').default
+    },
+    {
+        path: '/products/:slug',
         component: require('./components/SingleProduct.vue').default
     },
     {

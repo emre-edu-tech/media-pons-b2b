@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Product;
+use App\Category;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
 class ProductsController extends Controller
 {
@@ -19,9 +20,9 @@ class ProductsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Product::orderBy('name', 'ASC')->get();
+        
     }
 
     /**
@@ -38,12 +39,12 @@ class ProductsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  string  $slug
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($slug)
     {
-        return $product = Product::findOrFail($id);
+        return $product = Product::where('slug', $slug)->firstOrFail();
     }
 
     /**
@@ -67,5 +68,76 @@ class ProductsController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    // Custom functions
+    public function getProductsByCategory(Request $request) {
+
+        if($request->category) {
+            $slug = $request->category;
+            if($request->price) {
+                if($request->price == 'low_high') {
+                    return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                        $query->where('slug', $slug);
+                    })->orderBy('regular_price', 'ASC')->paginate(3);
+                } else if($request->price == 'high_low') {
+                    return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                        $query->where('slug', $slug);
+                    })->orderBy('regular_price', 'DESC')->paginate(3);
+                }
+            } else {
+                return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                    $query->where('slug', $slug);
+                })->paginate(3);
+            }
+        } else if ($request->price) {
+            if($request->price == 'low_high') {
+                return Product::orderBy('regular_price', 'ASC')->paginate(3);
+            } else if($request->price == 'high_low') {
+                return Product::orderBy('regular_price', 'DESC')->paginate(3);
+            }
+        } else {
+            return Product::orderBy('name', 'ASC')->paginate(3);
+        }
+
+        // if(!$slug) {
+        //     // sort the products according to sort query string
+        //     if($request->sort == 'low_high') {
+        //         return Product::orderBy('regular_price', 'ASC')->paginate(3);
+        //     } else if($request->sort == 'high_low') {
+        //         return Product::orderBy('regular_price', 'DESC')->paginate(3);
+        //     } else {
+        //         return Product::orderBy('name', 'ASC')->paginate(3);
+        //     }
+        // } else {
+        //     // sort the products according to sort query string
+        //     if($request->sort == 'low_high') {
+        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+        //             $query->where('slug', $slug);
+        //         })->orderBy('regular_price', 'ASC')->paginate(3);
+        //     } else if($request->sort == 'high_low') {
+        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+        //             $query->where('slug', $slug);
+        //         })->orderBy('regular_price', 'DESC')->paginate(3);
+        //     } else {
+        //         return ['message' => 'here'];
+        //         // Get the products according to categories (slug)
+        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+        //             $query->where('slug', $slug);
+        //         })->paginate(3);
+        //     }
+        // }
+
+        // get category name
+        // $categoryName = Category::where('slug', $slug)->firstOrFail()->name;
+
+        // return [
+        //     'products' => $products,
+        //     'categoryName' => $categoryName ? $categoryName : '',
+        // ];
+    }
+
+    public function getAllCategories() {
+        return Category::where('parent_id', NULL)->get();
     }
 }

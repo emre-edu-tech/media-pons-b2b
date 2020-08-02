@@ -18,9 +18,13 @@ use Gloudemans\Shoppingcart\Facades\Cart;
 Route::apiResources([
     'users' => 'API\UsersController',
     'dealers' => 'API\DealersController',
-    'products'  => 'API\ProductsController',
-    'cities'    => 'API\CitiesController'
+    'cities'    => 'API\CitiesController',
 ]);
+
+// Products Controller Routes
+Route::get('/products/{product}', 'API\ProductsController@show')->name('products.show');
+Route::get('/get-categories', 'API\ProductsController@getAllCategories')->name('categories.index');
+Route::get('/get-products-by-category', 'API\ProductsController@getProductsByCategory')->name('categories.products');
 
 // MessagesController Custom Routes
 Route::get('/conversation/{id}', 'API\MessagesController@getMessagesFor')->name('conversation.allmessages');

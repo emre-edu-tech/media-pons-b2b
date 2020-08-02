@@ -16,8 +16,9 @@ class CartController extends Controller
 
     public function addProduct(Request $request)
     {
-        // validate the price
-        $price = (int)str_replace(',', '', str_replace('.', '', $request->price));
+        // # IMPORTANT!!!
+        // sanitize the price to store to the database cause we store price as integer in cents in this app
+        $price = str_replace(',', '', str_replace('.', '', $request->price));
         $message = Cart::add($request->id, $request->name, $request->quantity, $price)
             ->associate('App\Product');
         

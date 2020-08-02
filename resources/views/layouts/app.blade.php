@@ -22,7 +22,7 @@
 </head>
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
                     {{ config('app.name', 'Laravel') }}
@@ -37,9 +37,6 @@
                     <ul class="navbar-nav mr-auto">
                         @auth
                             <li class="nav-item">
-                                <a class="nav-link" href="/">Willkommen</a>
-                            </li>
-                            <li class="nav-item">
                                 <router-link class="nav-link" to="/home">Home</router-link>
                             </li>
                             @can('isAdmin')
@@ -53,7 +50,7 @@
                                 </li>
                             @endcan
                             <li class="nav-item">
-                                <router-link class="nav-link" to="/products">Produkte</router-link>
+                                <router-link class="nav-link" to="/categories">Produkte</router-link>
                             </li>
                             <li class="nav-item">
                                 <router-link class="nav-link" to="/cart">Warenkorb</router-link>
