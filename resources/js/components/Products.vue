@@ -33,14 +33,23 @@
             <div class="col-sm-12 col-md-9">
                 <div class="products-header d-flex justify-content-between">
                     <h3>{{ categoryName }}</h3>
-                    <div class="sorting">
+                    <div class="featured-items">
+                        <strong>Featured: </strong>
+                        <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}` : ''}${selectedPriceSort ? `${((queryStringObj.category || queryStringObj.featured) && selectedCategory) ? '&' : '?'}price=${selectedPriceSort}` : ''}${(queryStringObj.price || queryStringObj.category) ? '&' : '?'}featured=true` }" class="btn btn-link featured-link">
+                            Featured
+                        </router-link>
+                        | <router-link :to="{ path: `/categories` }" class="btn btn-link">All</router-link>
+                    </div>
+                    <div class="sorting" v-show="products.total > 0">
                         <strong>Price: </strong>
-                        <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}&` : '?'}price=low_high` }" class="btn btn-link">low to high</router-link>
-                        <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}&` : '?'}price=high_low` }" class="btn btn-link">high to low</router-link>
+                        <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}` : ''}${featured ? `${((queryStringObj.price || queryStringObj.category) && selectedCategory) ? '&' : '?'}featured=true` : ''}${(queryStringObj.category || queryStringObj.featured) ? '&' : '?'}price=low_high` }" class="btn btn-link">low to high</router-link> 
+                        |
+                        <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}` : ''}${featured ? `${((queryStringObj.price || queryStringObj.category) && selectedCategory) ? '&' : '?'}featured=true` : ''}${(queryStringObj.category || queryStringObj.featured) ? '&' : '?'}price=high_low` }"
+                        class="btn btn-link">High to low</router-link>
                     </div>
                 </div>
                 <hr>
-                <div class="row productListing">
+                <div class="row productListing vld-parent" ref="productListing">
                     <div v-for="product in products.data" v-bind:key="product.id" class="col-sm-12 col-md-6 col-xl-4 mb-3">
                         <div class="card p-4">
                             <router-link :to="{ path: `/products/${product.slug}` }">
@@ -60,13 +69,13 @@
                 <div class="row">
                     <div class="col-12">
                         <!-- pagination -->
-                        <pagination :data="products" @pagination-change-page="getProductsByCategory">
+                        <pagination :data="products" :show-disabled="true" @pagination-change-page="getProductsByCategory">
                             <span slot="prev-nav">&lt; Önceki</span>
                             <span slot="next-nav">Sonraki &gt;</span>
                         </pagination>
                     </div>
                 </div>
-                <div class="row" v-if="products.length <= 0">
+                <div class="row" v-if="products.total <= 0">
                     <div class="col-sm-12 mt-3 font-weight-bold">No products found</div>
                 </div>
             </div>
@@ -86,6 +95,8 @@
                 currentUrl: '',
                 selectedCategory: '',
                 selectedPriceSort: '',
+                featured: false,
+                queryStringObj: '',
             }
         },
         methods: {
@@ -99,25 +110,50 @@
             },
 
             getProductsByCategory(page = 1) {
+                console.log(this.featured);
                 let url = '';
                 if(this.selectedCategory != '') {
                     if(this.selectedPriceSort != '') {
-                        url = `/api/get-products-by-category?category=${this.selectedCategory}&price=${this.selectedPriceSort}&page=${page}`;
+                        if(this.featured) {
+                            url = `/api/get-products-by-category?category=${this.selectedCategory}&price=${this.selectedPriceSort}&featured=true&page=${page}`;    
+                        } else {
+                            url = `/api/get-products-by-category?category=${this.selectedCategory}&price=${this.selectedPriceSort}&page=${page}`;
+                        }
                     } else {
-                        url = `/api/get-products-by-category?category=${this.selectedCategory}&page=${page}`;
+                        if(this.featured) {
+                            url = `/api/get-products-by-category?category=${this.selectedCategory}&featured=true&page=${page}`;    
+                        } else {
+                            url = `/api/get-products-by-category?category=${this.selectedCategory}&page=${page}`;
+                        }
                     }
-                } else if(this.selectedPriceSort != ''){
-                    url = `/api/get-products-by-category?price=${this.selectedPriceSort}&page=${page}`;
+                } else if (this.selectedPriceSort != ''){
+                    if(this.featured) {
+                        url = `/api/get-products-by-category?price=${this.selectedPriceSort}&featured=true&page=${page}`;
+                    } else {
+                        url = `/api/get-products-by-category?price=${this.selectedPriceSort}&page=${page}`;
+                    }
                 } else {
-                    url = `/api/get-products-by-category?page=${page}`;
+                    if(this.featured) {
+                        url = `/api/get-products-by-category?featured=true&page=${page}`;    
+                    } else {
+                        url = `/api/get-products-by-category?page=${page}`;
+                    }
                 }
+
+                let loader = this.$loading.show({
+                    // Optional parameters
+                    container: this.fullPage ? null : this.$refs.productListing,
+                    canCancel: false,
+                });
 
                 axios.get(url)
                 .then((response) => {
-                    console.log(response);
-                    this.products = response.data;
+                    this.products = response.data.products;
+                    this.categoryName = response.data.categoryName;
+                    loader.hide();
                 }).catch((error) => {
                     console.log(error);
+                    loader.hide();
                 });
             }
         },
@@ -127,20 +163,43 @@
             // in case of refresh save the current page
             let category = this.$route.query.category;
             let priceSort = this.$route.query.price;
+            let featured = this.$route.query.featured;
             if(category) {
                 if (priceSort) {
+                    if(featured) {
+                        // category && price && featured
+                        this.featured = true;
+                    } else {
+                        // category && price
+                        this.featured = false;
+                    }
                     this.selectedCategory = category;
                     this.selectedPriceSort = priceSort;
                     this.getProductsByCategory();
                 } else {
+                    if(featured) {
+                        // category && featured
+                        this.featured = true;
+                    } else {
+                        // category
+                        this.featured = false;
+                    }
                     this.selectedCategory = category;
                     this.getProductsByCategory();
                 }
             } else if (priceSort) {
+                if(featured) {
+                    // price && featured
+                    this.featured = true;    
+                } else {
+                    // price
+                    this.featured = false;
+                }
                 this.selectedPriceSort = priceSort;
                 this.getProductsByCategory();
             } else {
                 // probably the first load
+                // no query string
                 this.getProductsByCategory();
             }
         },
@@ -149,20 +208,49 @@
         watch: {
             '$route'(to, from) {
                 this.currentUrl = to.path;
+                this.queryStringObj = to.query;
                 if(to.query.category) {
                     if(to.query.price) {
+                        if(to.query.featured) {
+                            // category && price && featured
+                            this.featured = to.query.featured;
+                        } else {
+                            // category && price
+                            this.featured = false;
+                        }
                         this.selectedCategory = to.query.category;
                         this.selectedPriceSort = to.query.price;
                         this.getProductsByCategory();
                     } else {
+                        // category && featured
+                        if(to.query.featured) {
+                            this.featured = to.query.featured;
+                        } else {
+                            // category
+                            this.featured = false;
+                        }
                         this.selectedCategory = to.query.category;
                         this.selectedPriceSort = '';
                         this.getProductsByCategory();
                     }
                 } else if(to.query.price) {
+                    if(to.query.featured) {
+                        // price && featured
+                        this.featured = to.query.featured;
+                    } else {
+                        // featured
+                        this.featured = false;
+                    }
                     this.selectedPriceSort = to.query.price;
                     this.getProductsByCategory();
+                } else if(to.query.featured) {
+                    this.featured = true;
+                    this.selectedCategory ='';
+                    this.selectedPriceSort = '';
+                    this.getProductsByCategory();
                 } else {
+                    // no query string
+                    this.featured = false;
                     this.selectedCategory ='';
                     this.selectedPriceSort = '';
                     this.getProductsByCategory();

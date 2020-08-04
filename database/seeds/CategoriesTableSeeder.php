@@ -30,5 +30,7 @@ class CategoriesTableSeeder extends Seeder
             ['name' => 'Kaffee', 'slug' => 'kaffee-tee-kakao-kaffee', 'parent_id' => 7, 'created_at' => $now, 'updated_at' => $now],
             ['name' => 'Tabak', 'slug' => 'tabak', 'parent_id' => 7, 'created_at' => $now, 'updated_at' => $now],
         ]);
+
+        $this->command->info('Categories table seeded!');
     }
 }

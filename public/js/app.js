@@ -2599,32 +2599,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
  // Set your publishable key: remember to change this to your live publishable key in production
 // See your keys here: https://dashboard.stripe.com/account/apikeys
 // Mix variables have been defined in .env file
@@ -3378,6 +3352,15 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -3386,7 +3369,9 @@ __webpack_require__.r(__webpack_exports__);
       categoryName: '',
       currentUrl: '',
       selectedCategory: '',
-      selectedPriceSort: ''
+      selectedPriceSort: '',
+      featured: false,
+      queryStringObj: ''
     };
   },
   methods: {
@@ -3403,25 +3388,49 @@ __webpack_require__.r(__webpack_exports__);
       var _this2 = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+      console.log(this.featured);
       var url = '';
 
       if (this.selectedCategory != '') {
         if (this.selectedPriceSort != '') {
-          url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&price=").concat(this.selectedPriceSort, "&page=").concat(page);
+          if (this.featured) {
+            url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&price=").concat(this.selectedPriceSort, "&featured=true&page=").concat(page);
+          } else {
+            url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&price=").concat(this.selectedPriceSort, "&page=").concat(page);
+          }
         } else {
-          url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&page=").concat(page);
+          if (this.featured) {
+            url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&featured=true&page=").concat(page);
+          } else {
+            url = "/api/get-products-by-category?category=".concat(this.selectedCategory, "&page=").concat(page);
+          }
         }
       } else if (this.selectedPriceSort != '') {
-        url = "/api/get-products-by-category?price=".concat(this.selectedPriceSort, "&page=").concat(page);
+        if (this.featured) {
+          url = "/api/get-products-by-category?price=".concat(this.selectedPriceSort, "&featured=true&page=").concat(page);
+        } else {
+          url = "/api/get-products-by-category?price=".concat(this.selectedPriceSort, "&page=").concat(page);
+        }
       } else {
-        url = "/api/get-products-by-category?page=".concat(page);
+        if (this.featured) {
+          url = "/api/get-products-by-category?featured=true&page=".concat(page);
+        } else {
+          url = "/api/get-products-by-category?page=".concat(page);
+        }
       }
 
+      var loader = this.$loading.show({
+        // Optional parameters
+        container: this.fullPage ? null : this.$refs.productListing,
+        canCancel: false
+      });
       axios.get(url).then(function (response) {
-        console.log(response);
-        _this2.products = response.data;
+        _this2.products = response.data.products;
+        _this2.categoryName = response.data.categoryName;
+        loader.hide();
       })["catch"](function (error) {
         console.log(error);
+        loader.hide();
       });
     }
   },
@@ -3431,21 +3440,47 @@ __webpack_require__.r(__webpack_exports__);
 
     var category = this.$route.query.category;
     var priceSort = this.$route.query.price;
+    var featured = this.$route.query.featured;
 
     if (category) {
       if (priceSort) {
+        if (featured) {
+          // category && price && featured
+          this.featured = true;
+        } else {
+          // category && price
+          this.featured = false;
+        }
+
         this.selectedCategory = category;
         this.selectedPriceSort = priceSort;
         this.getProductsByCategory();
       } else {
+        if (featured) {
+          // category && featured
+          this.featured = true;
+        } else {
+          // category
+          this.featured = false;
+        }
+
         this.selectedCategory = category;
         this.getProductsByCategory();
       }
     } else if (priceSort) {
+      if (featured) {
+        // price && featured
+        this.featured = true;
+      } else {
+        // price
+        this.featured = false;
+      }
+
       this.selectedPriceSort = priceSort;
       this.getProductsByCategory();
     } else {
       // probably the first load
+      // no query string
       this.getProductsByCategory();
     }
   },
@@ -3453,21 +3488,53 @@ __webpack_require__.r(__webpack_exports__);
   watch: {
     '$route': function $route(to, from) {
       this.currentUrl = to.path;
+      this.queryStringObj = to.query;
 
       if (to.query.category) {
         if (to.query.price) {
+          if (to.query.featured) {
+            // category && price && featured
+            this.featured = to.query.featured;
+          } else {
+            // category && price
+            this.featured = false;
+          }
+
           this.selectedCategory = to.query.category;
           this.selectedPriceSort = to.query.price;
           this.getProductsByCategory();
         } else {
+          // category && featured
+          if (to.query.featured) {
+            this.featured = to.query.featured;
+          } else {
+            // category
+            this.featured = false;
+          }
+
           this.selectedCategory = to.query.category;
           this.selectedPriceSort = '';
           this.getProductsByCategory();
         }
       } else if (to.query.price) {
+        if (to.query.featured) {
+          // price && featured
+          this.featured = to.query.featured;
+        } else {
+          // featured
+          this.featured = false;
+        }
+
         this.selectedPriceSort = to.query.price;
         this.getProductsByCategory();
+      } else if (to.query.featured) {
+        this.featured = true;
+        this.selectedCategory = '';
+        this.selectedPriceSort = '';
+        this.getProductsByCategory();
       } else {
+        // no query string
+        this.featured = false;
         this.selectedCategory = '';
         this.selectedPriceSort = '';
         this.getProductsByCategory();
@@ -4102,9 +4169,16 @@ __webpack_require__.r(__webpack_exports__);
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
       if (this.$gate.isAdmin()) {
+        var loader = this.$loading.show({
+          // Optional parameters
+          container: this.fullPage ? null : this.$refs.usersList,
+          canCancel: false
+        });
         axios.get("/api/get-users?page=".concat(page)).then(function (response) {
           _this4.users = response.data;
+          loader.hide();
         })["catch"](function (response) {
+          loader.hide();
           swal.fire('Fehler!', 'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.', 'error');
         });
       }
@@ -72995,7 +73069,7 @@ var render = function() {
                   "router-link",
                   {
                     staticClass: "btn btn-success",
-                    attrs: { to: { path: "/products" } }
+                    attrs: { to: { path: "/categories" } }
                   },
                   [
                     _vm._v("Continue Shopping "),
@@ -73407,7 +73481,7 @@ var render = function() {
                 "router-link",
                 {
                   staticClass: "btn btn-success",
-                  attrs: { to: { path: "/products" } }
+                  attrs: { to: { path: "/categories" } }
                 },
                 [
                   _vm._v("Continue Shopping "),
@@ -75595,7 +75669,71 @@ var render = function() {
             _vm._v(" "),
             _c(
               "div",
-              { staticClass: "sorting" },
+              { staticClass: "featured-items" },
+              [
+                _c("strong", [_vm._v("Featured: ")]),
+                _vm._v(" "),
+                _c(
+                  "router-link",
+                  {
+                    staticClass: "btn btn-link featured-link",
+                    attrs: {
+                      to: {
+                        path:
+                          "" +
+                          _vm.currentUrl +
+                          (_vm.selectedCategory
+                            ? "?category=" + _vm.selectedCategory
+                            : "") +
+                          (_vm.selectedPriceSort
+                            ? ((_vm.queryStringObj.category ||
+                                _vm.queryStringObj.featured) &&
+                              _vm.selectedCategory
+                                ? "&"
+                                : "?") +
+                              "price=" +
+                              _vm.selectedPriceSort
+                            : "") +
+                          (_vm.queryStringObj.price ||
+                          _vm.queryStringObj.category
+                            ? "&"
+                            : "?") +
+                          "featured=true"
+                      }
+                    }
+                  },
+                  [
+                    _vm._v(
+                      "\n                        Featured\n                    "
+                    )
+                  ]
+                ),
+                _vm._v("\n                    | "),
+                _c(
+                  "router-link",
+                  {
+                    staticClass: "btn btn-link",
+                    attrs: { to: { path: "/categories" } }
+                  },
+                  [_vm._v("All")]
+                )
+              ],
+              1
+            ),
+            _vm._v(" "),
+            _c(
+              "div",
+              {
+                directives: [
+                  {
+                    name: "show",
+                    rawName: "v-show",
+                    value: _vm.products.total > 0,
+                    expression: "products.total > 0"
+                  }
+                ],
+                staticClass: "sorting"
+              },
               [
                 _c("strong", [_vm._v("Price: ")]),
                 _vm._v(" "),
@@ -75609,7 +75747,18 @@ var render = function() {
                           "" +
                           _vm.currentUrl +
                           (_vm.selectedCategory
-                            ? "?category=" + _vm.selectedCategory + "&"
+                            ? "?category=" + _vm.selectedCategory
+                            : "") +
+                          (_vm.featured
+                            ? ((_vm.queryStringObj.price ||
+                                _vm.queryStringObj.category) &&
+                              _vm.selectedCategory
+                                ? "&"
+                                : "?") + "featured=true"
+                            : "") +
+                          (_vm.queryStringObj.category ||
+                          _vm.queryStringObj.featured
+                            ? "&"
                             : "?") +
                           "price=low_high"
                       }
@@ -75617,7 +75766,7 @@ var render = function() {
                   },
                   [_vm._v("low to high")]
                 ),
-                _vm._v(" "),
+                _vm._v(" \n                    |\n                    "),
                 _c(
                   "router-link",
                   {
@@ -75628,13 +75777,24 @@ var render = function() {
                           "" +
                           _vm.currentUrl +
                           (_vm.selectedCategory
-                            ? "?category=" + _vm.selectedCategory + "&"
+                            ? "?category=" + _vm.selectedCategory
+                            : "") +
+                          (_vm.featured
+                            ? ((_vm.queryStringObj.price ||
+                                _vm.queryStringObj.category) &&
+                              _vm.selectedCategory
+                                ? "&"
+                                : "?") + "featured=true"
+                            : "") +
+                          (_vm.queryStringObj.category ||
+                          _vm.queryStringObj.featured
+                            ? "&"
                             : "?") +
                           "price=high_low"
                       }
                     }
                   },
-                  [_vm._v("high to low")]
+                  [_vm._v("High to low")]
                 )
               ],
               1
@@ -75646,7 +75806,10 @@ var render = function() {
         _vm._v(" "),
         _c(
           "div",
-          { staticClass: "row productListing" },
+          {
+            ref: "productListing",
+            staticClass: "row productListing vld-parent"
+          },
           _vm._l(_vm.products.data, function(product) {
             return _c(
               "div",
@@ -75732,7 +75895,7 @@ var render = function() {
               _c(
                 "pagination",
                 {
-                  attrs: { data: _vm.products },
+                  attrs: { data: _vm.products, "show-disabled": true },
                   on: { "pagination-change-page": _vm.getProductsByCategory }
                 },
                 [
@@ -75754,7 +75917,7 @@ var render = function() {
           )
         ]),
         _vm._v(" "),
-        _vm.products.length <= 0
+        _vm.products.total <= 0
           ? _c("div", { staticClass: "row" }, [
               _c("div", { staticClass: "col-sm-12 mt-3 font-weight-bold" }, [
                 _vm._v("No products found")
@@ -76376,112 +76539,121 @@ var render = function() {
                   ]
                 ),
                 _vm._v(" "),
-                _c("div", { staticClass: "card-body table-responsive p-0" }, [
-                  _c("table", { staticClass: "table table-hover" }, [
-                    _vm._m(1),
-                    _vm._v(" "),
-                    _c(
-                      "tbody",
-                      _vm._l(_vm.users.data, function(user) {
-                        return _c("tr", { key: user.id }, [
-                          _c("td", [
-                            _vm._v(_vm._s(_vm._f("titleCase")(user.name)))
-                          ]),
-                          _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.company_name))]),
-                          _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.email))]),
-                          _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.phone_number))]),
-                          _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.company_description))]),
-                          _vm._v(" "),
-                          _c("td", [
-                            _c(
-                              "a",
-                              {
-                                attrs: {
-                                  target: "_blank",
-                                  href:
-                                    "/storage/documents/" +
-                                    user.business_registration_form
-                                }
-                              },
-                              [_vm._v("anzeigen")]
-                            )
-                          ]),
-                          _vm._v(" "),
-                          _c("td", [
-                            _c(
-                              "a",
-                              {
-                                attrs: {
-                                  target: "_blank",
-                                  href: "/storage/documents/" + user.id_card
-                                }
-                              },
-                              [_vm._v("anzeigen")]
-                            )
-                          ]),
-                          _vm._v(" "),
-                          _c("td", [_vm._v(_vm._s(user.tax_number))]),
-                          _vm._v(" "),
-                          _c("td", [
-                            _vm._v(
-                              _vm._s(_vm._f("customDate")(user.created_at))
-                            )
-                          ]),
-                          _vm._v(" "),
-                          _c("td", [
-                            _c("div", [
-                              _c(
-                                "a",
-                                {
-                                  staticClass: "mr-2",
-                                  attrs: {
-                                    href: "#",
-                                    title: "Benutzer löschen"
-                                  },
-                                  on: {
-                                    click: function($event) {
-                                      return _vm.deleteUser(user.id)
-                                    }
-                                  }
-                                },
-                                [
-                                  _c("i", {
-                                    staticClass: "fa fa-trash text-red"
-                                  })
-                                ]
-                              ),
-                              _vm._v(" "),
+                _c(
+                  "div",
+                  {
+                    ref: "usersList",
+                    staticClass: "card-body table-responsive p-0 vld-parent"
+                  },
+                  [
+                    _c("table", { staticClass: "table table-hover" }, [
+                      _vm._m(1),
+                      _vm._v(" "),
+                      _c(
+                        "tbody",
+                        _vm._l(_vm.users.data, function(user) {
+                          return _c("tr", { key: user.id }, [
+                            _c("td", [
+                              _vm._v(_vm._s(_vm._f("titleCase")(user.name)))
+                            ]),
+                            _vm._v(" "),
+                            _c("td", [_vm._v(_vm._s(user.company_name))]),
+                            _vm._v(" "),
+                            _c("td", [_vm._v(_vm._s(user.email))]),
+                            _vm._v(" "),
+                            _c("td", [_vm._v(_vm._s(user.phone_number))]),
+                            _vm._v(" "),
+                            _c("td", [
+                              _vm._v(_vm._s(user.company_description))
+                            ]),
+                            _vm._v(" "),
+                            _c("td", [
                               _c(
                                 "a",
                                 {
                                   attrs: {
-                                    href: "#",
-                                    title: "Neues Passwort senden"
-                                  },
-                                  on: {
-                                    click: function($event) {
-                                      return _vm.sendNewPassword(user.id)
-                                    }
+                                    target: "_blank",
+                                    href:
+                                      "/storage/documents/" +
+                                      user.business_registration_form
                                   }
                                 },
-                                [
-                                  _c("i", {
-                                    staticClass: "fas fa-key text-blue"
-                                  })
-                                ]
+                                [_vm._v("anzeigen")]
                               )
+                            ]),
+                            _vm._v(" "),
+                            _c("td", [
+                              _c(
+                                "a",
+                                {
+                                  attrs: {
+                                    target: "_blank",
+                                    href: "/storage/documents/" + user.id_card
+                                  }
+                                },
+                                [_vm._v("anzeigen")]
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _c("td", [_vm._v(_vm._s(user.tax_number))]),
+                            _vm._v(" "),
+                            _c("td", [
+                              _vm._v(
+                                _vm._s(_vm._f("customDate")(user.created_at))
+                              )
+                            ]),
+                            _vm._v(" "),
+                            _c("td", [
+                              _c("div", [
+                                _c(
+                                  "a",
+                                  {
+                                    staticClass: "mr-2",
+                                    attrs: {
+                                      href: "#",
+                                      title: "Benutzer löschen"
+                                    },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.deleteUser(user.id)
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass: "fa fa-trash text-red"
+                                    })
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "a",
+                                  {
+                                    attrs: {
+                                      href: "#",
+                                      title: "Neues Passwort senden"
+                                    },
+                                    on: {
+                                      click: function($event) {
+                                        return _vm.sendNewPassword(user.id)
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c("i", {
+                                      staticClass: "fas fa-key text-blue"
+                                    })
+                                  ]
+                                )
+                              ])
                             ])
                           ])
-                        ])
-                      }),
-                      0
-                    )
-                  ])
-                ]),
+                        }),
+                        0
+                      )
+                    ])
+                  ]
+                ),
                 _vm._v(" "),
                 _vm.users.last_page > 1
                   ? _c(

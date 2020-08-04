@@ -5,7 +5,7 @@
                 <button class="btn btn-danger mb-2" v-if="!noProducts" @click="emptyCart">Empty Cart</button>
                 <div class="empty-cart-notice" v-if="noProducts">
                     <h3 class="text-info">Your shopping cart is empty!</h3>
-                    <router-link :to="{ path: '/products' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
+                    <router-link :to="{ path: '/categories' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
                 </div>
                 <div class="card shopping-cart" v-else>
                     <div class="card-header bg-dark text-light">

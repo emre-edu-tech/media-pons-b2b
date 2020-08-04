@@ -73,68 +73,75 @@ class ProductsController extends Controller
     // Custom functions
     public function getProductsByCategory(Request $request) {
 
+        $pagination = 3;
+        $products = NULL;
+        $categoryName = NULL;
+
         if($request->category) {
             $slug = $request->category;
+            // get category name
+            $categoryName = optional(Category::where('slug', $slug)->first())->name;
             if($request->price) {
-                if($request->price == 'low_high') {
-                    return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-                        $query->where('slug', $slug);
-                    })->orderBy('regular_price', 'ASC')->paginate(3);
-                } else if($request->price == 'high_low') {
-                    return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-                        $query->where('slug', $slug);
-                    })->orderBy('regular_price', 'DESC')->paginate(3);
+                if($request->featured) {
+                    if($request->price == 'low_high') {
+                        $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                            $query->where('slug', $slug)->where('featured', 1);
+                        })->orderBy('regular_price', 'ASC')->paginate($pagination);
+                    } else if($request->price == 'high_low') {
+                        $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                            $query->where('slug', $slug)->where('featured', 1);
+                        })->orderBy('regular_price', 'DESC')->paginate($pagination);
+                    }           
+                } else {
+                    if($request->price == 'low_high') {
+                        $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                            $query->where('slug', $slug);
+                        })->orderBy('regular_price', 'ASC')->paginate($pagination);
+                    } else if($request->price == 'high_low') {
+                        $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                            $query->where('slug', $slug);
+                        })->orderBy('regular_price', 'DESC')->paginate($pagination);
+                    }
                 }
             } else {
-                return $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-                    $query->where('slug', $slug);
-                })->paginate(3);
+                if($request->featured) {
+                    $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                        $query->where('slug', $slug)->where('featured', 1);
+                    })->paginate($pagination);    
+                } else {
+                    $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
+                        $query->where('slug', $slug);
+                    })->paginate($pagination);
+                }
             }
         } else if ($request->price) {
-            if($request->price == 'low_high') {
-                return Product::orderBy('regular_price', 'ASC')->paginate(3);
-            } else if($request->price == 'high_low') {
-                return Product::orderBy('regular_price', 'DESC')->paginate(3);
+            if($request->featured) {
+                if($request->price == 'low_high') {
+                    $products = Product::where('featured', 1)->orderBy('regular_price', 'ASC')->paginate($pagination);
+                } else if($request->price == 'high_low') {
+                    $products = Product::where('featured', 1)->orderBy('regular_price', 'DESC')->paginate($pagination);
+                }    
+            } else {
+                if($request->price == 'low_high') {
+                    $products = Product::orderBy('regular_price', 'ASC')->paginate($pagination);
+                } else if($request->price == 'high_low') {
+                    $products = Product::orderBy('regular_price', 'DESC')->paginate($pagination);
+                }
             }
         } else {
-            return Product::orderBy('name', 'ASC')->paginate(3);
+            if($request->featured) {
+                $products = Product::where('featured', 1)->orderBy('name', 'ASC')->paginate($pagination);
+                $categoryName = 'Featured';    
+            } else {
+                $products = Product::orderBy('name', 'ASC')->paginate($pagination);
+                $categoryName = 'All Products';
+            }
         }
 
-        // if(!$slug) {
-        //     // sort the products according to sort query string
-        //     if($request->sort == 'low_high') {
-        //         return Product::orderBy('regular_price', 'ASC')->paginate(3);
-        //     } else if($request->sort == 'high_low') {
-        //         return Product::orderBy('regular_price', 'DESC')->paginate(3);
-        //     } else {
-        //         return Product::orderBy('name', 'ASC')->paginate(3);
-        //     }
-        // } else {
-        //     // sort the products according to sort query string
-        //     if($request->sort == 'low_high') {
-        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-        //             $query->where('slug', $slug);
-        //         })->orderBy('regular_price', 'ASC')->paginate(3);
-        //     } else if($request->sort == 'high_low') {
-        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-        //             $query->where('slug', $slug);
-        //         })->orderBy('regular_price', 'DESC')->paginate(3);
-        //     } else {
-        //         return ['message' => 'here'];
-        //         // Get the products according to categories (slug)
-        //         $products = Product::with('categories')->whereHas('categories', function($query) use ($slug) {
-        //             $query->where('slug', $slug);
-        //         })->paginate(3);
-        //     }
-        // }
-
-        // get category name
-        // $categoryName = Category::where('slug', $slug)->firstOrFail()->name;
-
-        // return [
-        //     'products' => $products,
-        //     'categoryName' => $categoryName ? $categoryName : '',
-        // ];
+        return [
+            'products' => $products,
+            'categoryName' => $categoryName ? $categoryName : 'Not a valid category',
+        ];
     }
 
     public function getAllCategories() {

@@ -21,6 +21,7 @@ class CreateProductsTable extends Migration
             $table->integer('regular_price')->nullable();
             $table->integer('sale_price')->nullable();
             $table->text('long_description')->nullable();
+            $table->boolean('featured')->default(false);
             $table->timestamps();
         });
     }

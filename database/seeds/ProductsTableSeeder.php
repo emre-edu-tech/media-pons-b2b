@@ -117,5 +117,7 @@ class ProductsTableSeeder extends Seeder
 
         $product = Product::find(8);
         $product->categories()->attach(9);
+
+        $this->command->info('Products table seeded!');
     }
 }

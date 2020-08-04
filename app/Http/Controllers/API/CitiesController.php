@@ -8,6 +8,12 @@ use App\City;
 
 class CitiesController extends Controller
 {
+    // added for api security
+    // allows only javascript applications with JWT to access api route
+    public function __construct() {
+        $this->middleware('auth:api');
+    }
+    
     /**
      * Display a listing of the resource.
      *

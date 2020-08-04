@@ -3,7 +3,7 @@
         <div class="row" v-if="noProducts">
             <div class="empty-cart-notice">
                 <h3 class="text-info mb-3">Your shopping cart is empty!</h3>
-                <router-link :to="{ path: '/products' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
+                <router-link :to="{ path: '/categories' }" class="btn btn-success">Continue Shopping <i class="fas fa-arrow-circle-right fa-fw mr-2"></i></router-link>
             </div>
         </div>
         <div class="row mt-5" v-if="isOrderDone">
@@ -160,32 +160,6 @@
                         </div>
                     </div>
                     <!-- Stripe ends here -->
-
-                    <!-- <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="cc-number">Credit card number</label>
-                            <input type="text" class="form-control" id="cc-number" placeholder="" required>
-                            <div class="invalid-feedback">
-                                Credit card number is required
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="cc-expiration">Expiration</label>
-                            <input type="text" class="form-control" id="cc-expiration" placeholder="MM/YY" required>
-                            <div class="invalid-feedback">
-                                Expiration date required
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="cc-expiration">CVV</label>
-                            <input type="text" class="form-control" id="cc-cvv" placeholder="" required>
-                            <div class="invalid-feedback">
-                                Security code required
-                            </div>
-                        </div>
-                    </div> -->
 
                     <hr class="mb-4">
                     <button class="btn btn-primary btn-lg btn-block" id="checkout-btn">Checkout!</button>

@@ -14,7 +14,7 @@
                         </div>
                     </div>
                     <!-- /.card-header -->
-                    <div class="card-body table-responsive p-0">
+                    <div class="card-body table-responsive p-0 vld-parent" ref="usersList">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -348,10 +348,17 @@
             },
             getAllUsers(page = 1) {
                 if(this.$gate.isAdmin()){
+                    let loader = this.$loading.show({
+                        // Optional parameters
+                        container: this.fullPage ? null : this.$refs.usersList,
+                        canCancel: false,
+                    });
                     axios.get(`/api/get-users?page=${page}`)
                     .then((response) => {
                         this.users = response.data;
+                        loader.hide();
                     }).catch((response) => {
+                        loader.hide();
                         swal.fire(
                             'Fehler!',
                             'Serverfehler oder Sie sind nicht berechtigt, diesen Vorgang auszuführen.',
