@@ -3388,7 +3388,6 @@ __webpack_require__.r(__webpack_exports__);
       var _this2 = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-      console.log(this.featured);
       var url = '';
 
       if (this.selectedCategory != '') {

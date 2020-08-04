@@ -110,7 +110,6 @@
             },
 
             getProductsByCategory(page = 1) {
-                console.log(this.featured);
                 let url = '';
                 if(this.selectedCategory != '') {
                     if(this.selectedPriceSort != '') {
