@@ -45,7 +45,7 @@
                         <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}` : ''}${featured ? `${((queryStringObj.price || queryStringObj.category) && selectedCategory) ? '&' : '?'}featured=true` : ''}${(queryStringObj.category || queryStringObj.featured) ? '&' : '?'}price=low_high` }" class="btn btn-link">low to high</router-link> 
                         |
                         <router-link :to="{ path: `${currentUrl}${selectedCategory ? `?category=${selectedCategory}` : ''}${featured ? `${((queryStringObj.price || queryStringObj.category) && selectedCategory) ? '&' : '?'}featured=true` : ''}${(queryStringObj.category || queryStringObj.featured) ? '&' : '?'}price=high_low` }"
-                        class="btn btn-link">High to low</router-link>
+                        class="btn btn-link">high to low</router-link>
                     </div>
                 </div>
                 <hr>

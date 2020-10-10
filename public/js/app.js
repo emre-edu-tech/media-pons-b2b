@@ -75793,7 +75793,7 @@ var render = function() {
                       }
                     }
                   },
-                  [_vm._v("High to low")]
+                  [_vm._v("high to low")]
                 )
               ],
               1
