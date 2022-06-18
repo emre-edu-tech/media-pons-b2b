@@ -33,9 +33,7 @@ Route::patch('/update-cart-item-quantity/{cartId}', 'CartController@updateCartIt
 Route::post('/get-stripe-client-secret', 'CheckoutController@store');
 
 // Web Authentication controllers
-Auth::routes([
-    'register' => false,
-]);
+Auth::routes();
 
 // Main Controller for the home page
 Route::get('/home', 'HomeController@index')->name('home');

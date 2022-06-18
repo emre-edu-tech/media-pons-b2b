@@ -100,7 +100,9 @@
         </nav>
 
         <main class="py-4">
-            <router-view :user="{{ Auth::user() }}"></router-view>
+            @auth
+                <router-view :user="{{ Auth::user() }}"></router-view>
+            @endauth
             <vue-progress-bar></vue-progress-bar>
         </main>
 

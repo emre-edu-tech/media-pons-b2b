@@ -81,7 +81,6 @@
                     @auth
                         <a href="{{ url('/home') }}">Home</a>
                     @else
-                        <a href="https://tobacco-shop-demo2.media-pons.de/" target="_blank">2 Brothers Tobacco Shop</a>
                         <a href="{{ route('login') }}">Benutzer Login</a>
                         <a class="nav-link" href="{{ route('front.applyform') }}">Partnerschaft beantragen</a>
                     @endauth
