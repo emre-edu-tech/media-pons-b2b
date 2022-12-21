@@ -81,7 +81,7 @@ class DealersController extends Controller
                 $save_path.$dealer->id_card
             ]);
 
-            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-reject-mail', 'Ihre Bewerbung wurde abgelehnt!');
+            $mailStatus = sendNotificationEmail('templates.mail.dealer-reject-mail', 'Ihre Bewerbung wurde abgelehnt!', $dealer, null);
 
             return [
                 'message' => 'Anwendung gelöscht',
@@ -129,7 +129,7 @@ class DealersController extends Controller
         // is new user is created then remove it from dealer applications
         if($newUser) {
             // send an email with user credentials
-            $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
+            $mailStatus = sendNotificationEmail('templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen', $newUser, $password);
             $this->removeDealerEntry($request->id);
             return [
                 'status' => 'success',

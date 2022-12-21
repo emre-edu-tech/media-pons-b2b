@@ -1,7 +1,7 @@
 <?php
 
 if (! function_exists('sendNotificationEmail')) {
-    function sendNotificationEmail($user = null, $password = null, $mailTemplate, $subject) {
+    function sendNotificationEmail($mailTemplate, $subject, $user = null, $password = null) {
         // send mail to the user with his password and mail
         $mailError = "";
         try {

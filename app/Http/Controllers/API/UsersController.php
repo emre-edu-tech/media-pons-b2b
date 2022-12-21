@@ -124,7 +124,7 @@ class UsersController extends Controller
             // is new user is created then remove it from dealer applications
             if($newUser) {
                 // send an email with user credentials
-                $mailStatus = sendNotificationEmail($newUser, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
+                $mailStatus = sendNotificationEmail('templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen', $newUser, $password);
                 return [
                     'status' => 'success',
                     'user_message' => 'Benutzer wird erstellt',
@@ -183,7 +183,7 @@ class UsersController extends Controller
                 $save_path.$user->id_card
             ]);
 
-            $mailStatus = sendNotificationEmail($user, null, 'templates.mail.user-delete-mail', 'Ihre Registrierung wurde gelöscht.');
+            $mailStatus = sendNotificationEmail('templates.mail.user-delete-mail', 'Ihre Registrierung wurde gelöscht.', $user, null);
 
             return [
                 'message' => 'Benutzer gelöscht.',
@@ -283,7 +283,7 @@ class UsersController extends Controller
         $user->password = $hashed_password;
 
         if($user->save()) {
-            $mailStatus = sendNotificationEmail($user, $password, 'templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen');
+            $mailStatus = sendNotificationEmail('templates.mail.user-confirmation-mail', 'Benutzeranmeldeinformationen', $user, $password);
             return [
                 'status' => 'success',
                 'user_message' => 'Neue Anmeldeinformationen gesendet',

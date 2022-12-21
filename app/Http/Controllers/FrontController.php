@@ -63,7 +63,7 @@ class FrontController extends Controller
             ]);
 
             // send dealer candidate an email that we got his application
-            $mailStatus = sendNotificationEmail($dealer, null, 'templates.mail.dealer-form-notification-mail', 'Anwendung empfangen');
+            $mailStatus = sendNotificationEmail('templates.mail.dealer-form-notification-mail', 'Anwendung empfangen', $dealer, null);
 
             return response()->json([
                 'message' => 'Nachricht erfolgreich gesendet',
